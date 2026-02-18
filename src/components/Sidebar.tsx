@@ -1,26 +1,11 @@
 'use client';
 
-import { SavedBet, Tier } from '@/types';
-import { formatTime } from '@/lib/utils';
 import { useState } from 'react';
-
-const TIER_LABELS: Record<Tier, string> = {
-    free: 'Free',
-    go: 'Go',
-    plus: 'Plus',
-    pro: 'Pro',
-};
-
-const TIER_BADGES: Record<Tier, string> = {
-    free: 'Click to Upgrade',
-    go: 'Go Member',
-    plus: 'Plus Member',
-    pro: 'Pro Member',
-};
+import { SavedBet } from '@/types';
+import { formatTime } from '@/lib/utils';
 
 interface SidebarProps {
     isOpen: boolean;
-    tier: Tier;
     savedBets: SavedBet[];
     sessionHistory: { title: string; sport: string }[];
     oddsCredits: string | null;
@@ -29,7 +14,6 @@ interface SidebarProps {
     onRemoveBet: (id: string) => void;
     onOpenAccount: () => void;
     onOpenPricing: () => void;
-    onSetTier: (tier: Tier) => void;
 }
 
 function isActiveBet(bet: SavedBet): boolean {
@@ -38,7 +22,6 @@ function isActiveBet(bet: SavedBet): boolean {
 
 export default function Sidebar({
     isOpen,
-    tier,
     savedBets,
     sessionHistory,
     oddsCredits,
@@ -47,11 +30,9 @@ export default function Sidebar({
     onRemoveBet,
     onOpenAccount,
     onOpenPricing,
-    onSetTier,
 }: SidebarProps) {
     const [activeTab, setActiveTab] = useState<'tracker' | 'history'>('tracker');
     const [betFilter, setBetFilter] = useState<'active' | 'archived'>('active');
-    const [protoOpen, setProtoOpen] = useState(false);
 
     const filteredBets = savedBets.filter((b) =>
         betFilter === 'active' ? isActiveBet(b) : !isActiveBet(b)
@@ -108,7 +89,7 @@ export default function Sidebar({
                             {filteredBets.length === 0 ? (
                                 <div style={{ fontSize: '0.7rem', color: 'var(--dim)', textAlign: 'center', padding: '30px 0', lineHeight: 1.7 }}>
                                     {betFilter === 'active'
-                                        ? 'No active bets saved.\nStar a book line while analyzing a game.'
+                                        ? 'No active bets saved. Star a book line while analyzing a game.'
                                         : 'No archived bets yet.'}
                                 </div>
                             ) : (
@@ -153,33 +134,6 @@ export default function Sidebar({
                     )}
                 </div>
 
-                <div className="proto-section">
-                    <div className="proto-toggle" onClick={() => setProtoOpen(!protoOpen)}>
-                        <div className="proto-toggle-label">Prototype Settings</div>
-                        <span className={`proto-chevron ${protoOpen ? 'open' : ''}`}>▼</span>
-                    </div>
-                    <div className={`proto-body ${protoOpen ? 'open' : ''}`}>
-                        <div className="proto-credit">
-                            <div>
-                                <div className="proto-credit-label">Odds API Credits</div>
-                                <div className="proto-credit-val">{oddsCredits || '-'}</div>
-                            </div>
-                        </div>
-                        <div className="proto-tier-label">Simulate Tier</div>
-                        <div className="proto-tier-grid">
-                            {(['free', 'go', 'plus', 'pro'] as Tier[]).map((t) => (
-                                <button
-                                    key={t}
-                                    className={`proto-tier-btn ${tier === t ? 'active' : ''}`}
-                                    onClick={() => onSetTier(t)}
-                                >
-                                    {TIER_LABELS[t]} {tier === t ? '✓' : ''}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
                 <div className="sidebar-footer">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div className="avatar" onClick={onOpenAccount}>
@@ -190,15 +144,20 @@ export default function Sidebar({
                             <div className="status-dot" />
                         </div>
                         <div>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 900 }}>{TIER_LABELS[tier]}</div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 900 }}>Account</div>
                             <div
                                 style={{ fontSize: '0.6rem', color: 'var(--gold)', fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
                                 onClick={onOpenPricing}
                             >
-                                {TIER_BADGES[tier]}
+                                View Plans
                             </div>
                         </div>
                     </div>
+                    {oddsCredits && (
+                        <div style={{ marginTop: '10px', fontSize: '0.56rem', color: 'var(--dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {oddsCredits} Odds API credits left
+                        </div>
+                    )}
                 </div>
             </aside>
         </>

@@ -1,41 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Game, Score, Injury, Analysis, SavedBet, Sport, Tier } from '@/types';
-import { makeScoreKey } from '@/lib/utils';
+import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import GamesGrid from '@/components/GamesGrid';
 import AnalysisView from '@/components/AnalysisView';
+import { useUser } from '@clerk/nextjs';
 
-const TIER_LIMITS: Record<Tier, { games: number; questions: number }> = {
-    free:  { games: 0,        questions: 0 },
-    go:    { games: 3,        questions: 10 },
-    plus:  { games: 10,       questions: 100 },
-    pro:   { games: Infinity, questions: 5000 },
-};
-
-const LS_TIER  = 'fo_tier';
-const LS_USAGE = 'fo_usage';
-const LS_FAVS  = 'fo_favs';
-
-function getUsage(): { date: string; games: number; questions: number } {
-    const today = new Date().toISOString().slice(0, 10);
-    try {
-        const raw = localStorage.getItem(LS_USAGE);
-        if (!raw) return { date: today, games: 0, questions: 0 };
-        const u = JSON.parse(raw);
-        return u.date === today ? u : { date: today, games: 0, questions: 0 };
-    } catch {
-        return { date: today, games: 0, questions: 0 };
-    }
-}
-
-function incrementUsage(field: 'games' | 'questions') {
-    const u = getUsage();
-    u[field] = (u[field] || 0) + 1;
-    localStorage.setItem(LS_USAGE, JSON.stringify(u));
-}
+const LS_FAVS = 'fo_favs';
 
 function getSavedBets(): SavedBet[] {
     try { return JSON.parse(localStorage.getItem(LS_FAVS) || '[]'); }
@@ -47,6 +20,8 @@ function saveBets(bets: SavedBet[]) {
 }
 
 export default function Home() {
+    const { user, isSignedIn } = useUser();
+
     const [currentSport, setCurrentSport] = useState<Sport>('basketball_nba');
     const [games, setGames]               = useState<Game[]>([]);
     const [scores, setScores]             = useState<Score[]>([]);
@@ -56,15 +31,16 @@ export default function Home() {
     const [analysis, setAnalysis]         = useState<Analysis | null>(null);
     const [analysisLoading, setAnalysisLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen]   = useState(false);
-    const [tier, setTierState]            = useState<Tier>('pro');
     const [savedBets, setSavedBets]       = useState<SavedBet[]>([]);
     const [sessionHistory, setSessionHistory] = useState<{ title: string; sport: string }[]>([]);
     const [oddsCredits, setOddsCredits]   = useState<string | null>(null);
 
     useEffect(() => {
-        const stored = localStorage.getItem(LS_TIER) as Tier | null;
-        if (!stored) localStorage.setItem(LS_TIER, 'pro');
-        setTierState((stored as Tier) || 'pro');
+        if (!isSignedIn || !user) return;
+        fetch('/api/user/sync', { method: 'POST' }).catch(console.error);
+    }, [isSignedIn, user]);
+
+    useEffect(() => {
         setSavedBets(getSavedBets());
     }, []);
 
@@ -131,18 +107,6 @@ export default function Home() {
         setAnalysis(null);
         setAnalysisLoading(true);
 
-        const canAnalyze = tier !== 'free' && (
-            TIER_LIMITS[tier].games === Infinity ||
-            getUsage().games < TIER_LIMITS[tier].games
-        );
-
-        if (!canAnalyze) {
-            setAnalysisLoading(false);
-            return;
-        }
-
-        incrementUsage('games');
-
         const gameInjuries = await getGameInjuries(game);
         setInjuries(gameInjuries);
 
@@ -159,9 +123,24 @@ export default function Home() {
                     },
                     oddsData: game.bookmakers,
                     injuryData: gameInjuries,
+                    gameId: game.id,
                     mode: 'initial',
                 }),
             });
+
+            if (res.status === 401) {
+                setAnalysis(null);
+                setAnalysisLoading(false);
+                return;
+            }
+
+            if (res.status === 403) {
+                const data = await res.json();
+                console.warn('Access denied:', data.code);
+                setAnalysis(null);
+                setAnalysisLoading(false);
+                return;
+            }
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data: Analysis = await res.json();
@@ -171,17 +150,12 @@ export default function Home() {
         } finally {
             setAnalysisLoading(false);
         }
-    }, [games, tier, getGameInjuries]);
+    }, [games, getGameInjuries]);
 
     const handleSelectHistory = useCallback((title: string) => {
         const game = games.find((g) => `${g.away_team} @ ${g.home_team}` === title);
         if (game) selectGame(game.id);
     }, [games, selectGame]);
-
-    const handleSetTier = useCallback((t: Tier) => {
-        localStorage.setItem(LS_TIER, t);
-        setTierState(t);
-    }, []);
 
     const handleSaveBet = useCallback((favId: string, bookTitle: string) => {
         if (!selectedGame) return;
@@ -226,7 +200,6 @@ export default function Home() {
 
             <Sidebar
                 isOpen={sidebarOpen}
-                tier={tier}
                 savedBets={savedBets}
                 sessionHistory={sessionHistory}
                 oddsCredits={oddsCredits}
@@ -235,7 +208,6 @@ export default function Home() {
                 onRemoveBet={handleRemoveBet}
                 onOpenAccount={() => {}}
                 onOpenPricing={() => {}}
-                onSetTier={handleSetTier}
             />
 
             <main className="main-content">

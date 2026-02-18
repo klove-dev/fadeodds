@@ -1,5 +1,6 @@
 'use client';
 
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Game } from '@/types';
 import { shortName, formatTime } from '@/lib/utils';
 
@@ -41,6 +42,24 @@ export default function Header({ games, onMenuClick }: HeaderProps) {
                         </>
                     )}
                 </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, marginLeft: '16px' }}>
+                <SignedOut>
+                    <SignInButton mode="modal">
+                        <button style={{
+                            background: 'var(--green)', color: '#000',
+                            border: 'none', borderRadius: '8px',
+                            padding: '7px 14px', fontWeight: 900,
+                            fontSize: '0.7rem', textTransform: 'uppercase',
+                            letterSpacing: '0.5px', cursor: 'pointer'
+                        }}>
+                            Sign In
+                        </button>
+                    </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                    <UserButton afterSignOutUrl="/" />
+                </SignedIn>
             </div>
         </header>
     );
