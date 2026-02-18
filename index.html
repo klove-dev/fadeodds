@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FadeOdds</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+        :root {
+            --bg: #050505;
+            --card: #111111;
+            --border: #222222;
+            --green: #39FF14;
+            --green-dark: #1a7a0a;
+            --gold: #FFD700;
+            --blue: #00d1ff;
+            --dim: #666;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* HEADER */
+        .fixed-header {
+            position: fixed; top: 0; left: 0;
+            width: 100%; z-index: 3000;
+            background: #000;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center;
+            height: 52px; padding: 0 16px;
+        }
+
+        .hamburger-btn {
+            background: #1a1a1a; border: 1px solid var(--border);
+            color: #fff; padding: 7px; border-radius: 8px;
+            cursor: pointer; flex-shrink: 0; margin-right: 16px;
+            transition: border-color 0.2s;
+        }
+        .hamburger-btn:hover { border-color: var(--green); }
+
+        .ticker-wrap {
+            flex-grow: 1; height: 32px; overflow: hidden;
+            display: flex; align-items: center;
+            mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+        }
+
+        .ticker {
+            display: flex; white-space: nowrap;
+            animation: ticker 85s linear infinite;
+        }
+        @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        .ticker-item {
+            padding: 0 28px; font-size: 0.62rem;
+            font-weight: 700; text-transform: uppercase; color: var(--dim);
+        }
+        .t-green { color: var(--green); margin-left: 5px; }
+        .t-gold { color: var(--gold); margin-left: 5px; }
+
+        /* SIDEBAR */
+        .sidebar-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+            z-index: 2400; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .sidebar-tray {
+            position: fixed; left: -320px; top: 0;
+            width: 290px; height: 100%;
+            background: #080808; border-right: 1px solid var(--border);
+            z-index: 2500;
+            transition: left 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column;
+        }
+        .sidebar-tray.open { left: 0; }
+
+        .sidebar-head {
+            padding: 20px 18px 14px; flex-shrink: 0;
+        }
+        .sidebar-logo {
+            font-size: 1.4rem; font-weight: 900; font-style: italic;
+        }
+
+        .sidebar-tabs {
+            display: flex; gap: 0; padding: 0 14px;
+            border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .sidebar-tab {
+            font-size: 0.58rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 1px; padding: 8px 14px; cursor: pointer;
+            color: var(--dim); border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s; margin-bottom: -1px;
+        }
+        .sidebar-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+        .sidebar-body {
+            flex: 1; padding: 14px 18px 18px; overflow-y: auto;
+        }
+
+        .history-item {
+            background: #111; border: 1px solid #1e1e1e;
+            padding: 12px 14px; border-radius: 10px;
+            margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s;
+        }
+        .history-item:hover { border-color: var(--green); }
+
+        .sidebar-footer { padding: 14px 18px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+
+        /* PROTOTYPE SETTINGS */
+        .proto-section {
+            border-top: 1px solid var(--border); padding: 12px 18px;
+            flex-shrink: 0;
+        }
+        .proto-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; user-select: none;
+        }
+        .proto-toggle-label {
+            font-size: 0.56rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 1.5px; color: #555; display: flex; align-items: center; gap: 7px;
+        }
+        .proto-toggle-label:hover { color: #888; }
+        .proto-chevron { font-size: 0.6rem; color: #444; transition: transform 0.2s; }
+        .proto-chevron.open { transform: rotate(180deg); }
+        .proto-body { display: none; padding-top: 12px; }
+        .proto-body.open { display: block; }
+        .proto-credit {
+            font-size: 0.6rem; font-weight: 700; color: var(--dim);
+            background: #111; border: 1px solid #1e1e1e; border-radius: 8px;
+            padding: 8px 12px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .proto-credit-label { text-transform: uppercase; letter-spacing: 1px; font-size: 0.52rem; color: #444; }
+        .proto-credit-val { color: var(--blue); font-weight: 900; }
+        .proto-tier-label {
+            font-size: 0.52rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 1px; color: #444; margin-bottom: 8px;
+        }
+        .proto-tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .proto-tier-btn {
+            padding: 7px; border-radius: 7px; font-size: 0.6rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
+            border: 1px solid #222; background: #0e0e0e; color: #555;
+            transition: all 0.15s;
+        }
+        .proto-tier-btn:hover { border-color: #444; color: #aaa; }
+        .proto-tier-btn.active { border-color: var(--green); color: var(--green); background: rgba(57,255,20,0.06); }
+
+        .avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: #000; border: 2px solid var(--green);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; flex-shrink: 0; cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .avatar:hover { border-color: #fff; }
+        .status-dot {
+            width: 9px; height: 9px; background: var(--green);
+            border-radius: 50%; position: absolute; bottom: 0; right: 0;
+            border: 2px solid #080808;
+        }
+
+        /* BET TRACKER */
+        .bet-filter-row {
+            display: flex; gap: 8px; margin-bottom: 14px;
+        }
+        .bet-filter {
+            font-size: 0.56rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 0.5px; padding: 5px 12px; border-radius: 100px;
+            cursor: pointer; border: 1px solid var(--border); color: var(--dim);
+            transition: all 0.15s;
+        }
+        .bet-filter.active { border-color: var(--green); color: var(--green); }
+
+        .bet-item {
+            background: #111; border: 1px solid #1e1e1e;
+            border-radius: 10px; padding: 11px 12px; margin-bottom: 7px;
+        }
+        .bet-item-top {
+            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px;
+        }
+        .bet-item-book { font-size: 0.72rem; font-weight: 900; }
+        .bet-item-pick { font-size: 0.78rem; font-weight: 900; color: var(--green); margin-bottom: 3px; }
+        .bet-item-game { font-size: 0.6rem; color: var(--dim); margin-bottom: 2px; }
+        .bet-item-time { font-size: 0.54rem; color: #444; }
+        .bet-item-remove {
+            background: none; border: none; color: #444; cursor: pointer;
+            font-size: 0.7rem; padding: 2px; line-height: 1; transition: color 0.15s;
+        }
+        .bet-item-remove:hover { color: #ff4444; }
+
+        /* MAIN */
+        .main-content { margin-top: 52px; padding-bottom: 80px; }
+
+        .logo {
+            font-size: 3.2rem; font-weight: 900; font-style: italic;
+            letter-spacing: -2px; text-align: center; text-transform: uppercase;
+            padding-top: 32px; user-select: none;
+        }
+        .logo-accent {
+            background: linear-gradient(to bottom, var(--green) 50%, var(--green-dark) 50%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            padding-right: 6px; display: inline-block;
+        }
+
+        /* SPORT TABS */
+        .sport-tabs {
+            display: flex; justify-content: center;
+            gap: 8px; margin: 18px 0 28px; padding: 0 20px; flex-wrap: wrap;
+        }
+        .sport-tab {
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--dim); padding: 8px 22px; border-radius: 100px;
+            font-size: 0.78rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .sport-tab:hover, .sport-tab.active {
+            border-color: var(--green); color: var(--green);
+            background: rgba(57,255,20,0.06);
+        }
+
+        /* GAMES */
+        .games-section { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        .section-label {
+            font-size: 0.62rem; font-weight: 900; color: var(--dim);
+            text-transform: uppercase; letter-spacing: 2px;
+            margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+        }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 14px;
+        }
+
+        .game-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 18px; padding: 18px 20px;
+            cursor: pointer; transition: all 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .game-card:hover {
+            border-color: rgba(57,255,20,0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+        }
+        .game-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(to right, transparent, var(--green), transparent);
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .game-card:hover::before { opacity: 1; }
+
+        .game-time {
+            font-size: 0.58rem; font-weight: 700; color: var(--dim);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+        }
+        .game-time.live { color: var(--green); }
+
+        .matchup {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 14px;
+        }
+        .team-name { font-size: 0.92rem; font-weight: 900; flex: 1; }
+        .team-name.away { text-align: left; }
+        .team-name.home { text-align: right; }
+        .vs-badge { font-size: 0.58rem; color: var(--dim); font-weight: 700; margin: 0 10px; }
+
+        .odds-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+        .odds-cell {
+            background: #0a0a0a; border: 1px solid #1a1a1a;
+            border-radius: 10px; padding: 8px; text-align: center;
+        }
+        .odds-cell-label { font-size: 0.5rem; color: var(--dim); font-weight: 700; text-transform: uppercase; margin-bottom: 3px; }
+        .odds-cell-val { font-size: 0.82rem; font-weight: 900; font-family: monospace; }
+        .odds-cell-val.pos { color: var(--green); }
+
+        .analyze-btn {
+            width: 100%; background: var(--green); color: #000;
+            font-weight: 900; font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 1px; padding: 10px; border-radius: 10px;
+            border: none; cursor: pointer; transition: opacity 0.2s;
+        }
+        .analyze-btn:hover { opacity: 0.88; }
+
+        .books-count { font-size: 0.56rem; color: var(--blue); font-weight: 700; text-align: center; margin-top: 8px; }
+
+        /* SKELETON */
+        .skeleton {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 18px; height: 175px;
+            animation: shimmer 1.5s infinite ease-in-out;
+        }
+        @keyframes shimmer { 0%,100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+
+        /* ANALYSIS */
+        .analysis-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: none; }
+
+        .game-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+            flex-wrap: wrap; gap: 12px;
+        }
+        .game-header-teams { font-size: 1.35rem; font-weight: 900; }
+        .game-header-meta { font-size: 0.62rem; color: var(--dim); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+
+        .back-btn {
+            background: #1a1a1a; border: 1px solid var(--border);
+            color: var(--dim); padding: 8px 16px; border-radius: 8px;
+            font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .back-btn:hover { color: #fff; border-color: #444; }
+
+        .conf-badge {
+            background: rgba(57,255,20,0.08); border: 1px solid rgba(57,255,20,0.2);
+            color: var(--green); padding: 6px 14px; border-radius: 100px;
+            font-size: 0.68rem; font-weight: 900; text-transform: uppercase;
+        }
+
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 22px; align-items: start; }
+
+        .intel-panel {
+            background: #080808; border: 1px solid var(--border);
+            border-radius: 20px; padding: 22px;
+            position: sticky; top: 62px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 0.58rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--gold);
+            display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
+        }
+
+        .intel-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+
+        .intel-tile { background: #111; border: 1px solid #1e1e1e; border-radius: 10px; padding: 12px; }
+        .intel-tile.hl { border-left: 3px solid var(--green); }
+        .intel-tile-label { font-size: 0.5rem; color: var(--dim); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .intel-tile-val { font-size: 0.88rem; font-weight: 900; }
+
+        .rec-box {
+            background: rgba(57,255,20,0.05); border: 1px solid rgba(57,255,20,0.15);
+            border-radius: 12px; padding: 14px; margin-bottom: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .rec-label { font-size: 0.56rem; color: var(--dim); font-weight: 900; text-transform: uppercase; }
+        .rec-val { font-size: 1.05rem; font-weight: 900; color: var(--green); font-family: monospace; }
+
+        .expert-take {
+            font-size: 0.8rem; color: #bbb; line-height: 1.65;
+            margin-bottom: 18px; padding: 14px;
+            background: #0c0c0c; border-radius: 10px;
+            border-left: 3px solid var(--green);
+        }
+
+        /* CHAT */
+        .chat-window {
+            max-height: 210px; overflow-y: auto;
+            display: flex; flex-direction: column;
+            gap: 10px; margin-bottom: 12px; padding-right: 4px;
+        }
+        .msg { font-size: 0.78rem; line-height: 1.55; padding: 10px 14px; border-radius: 12px; max-width: 93%; }
+        .msg-user { align-self: flex-end; background: #1e1e1e; border: 1px solid #2a2a2a; border-bottom-right-radius: 4px; }
+        .msg-ai { align-self: flex-start; background: rgba(57,255,20,0.04); border: 1px solid rgba(57,255,20,0.08); border-left: 3px solid var(--green); border-bottom-left-radius: 4px; }
+
+        .chat-input-row {
+            display: flex; gap: 10px; background: #111;
+            border: 1px solid var(--border); border-radius: 12px;
+            padding: 10px 14px; align-items: center;
+        }
+        .chat-input-row input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 0.82rem; }
+        .send-btn { color: var(--green); cursor: pointer; flex-shrink: 0; }
+
+        /* ODDS PANEL */
+        .odds-panel { display: flex; flex-direction: column; gap: 12px; }
+
+        .odds-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden; transition: transform 0.15s;
+        }
+        .odds-card:hover { transform: scale(1.01); }
+        .odds-card.best { border-color: var(--green); background: linear-gradient(135deg, #111 0%, #0d160d 100%); }
+
+        .odds-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 13px 18px; border-bottom: 1px solid var(--border);
+        }
+        .book-name { font-weight: 900; font-size: 0.88rem; }
+        .best-badge { background: var(--green); color: #000; font-size: 0.52rem; font-weight: 900; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+
+        .odds-markets { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 14px 18px; gap: 10px; }
+        .market-cell { text-align: center; }
+        .market-label { font-size: 0.5rem; color: var(--dim); font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+        .market-val { font-family: monospace; font-size: 1rem; font-weight: 900; }
+        .market-val.best-val { color: var(--green); }
+        .market-subval { font-size: 0.62rem; color: var(--dim); font-family: monospace; margin-top: 2px; }
+
+        .bet-link {
+            display: block; text-align: center; background: #fff; color: #000;
+            font-weight: 900; font-size: 0.7rem; padding: 9px 14px;
+            margin: 0 18px 14px; border-radius: 8px;
+            text-decoration: none; text-transform: uppercase; transition: opacity 0.2s;
+        }
+        .bet-link:hover { opacity: 0.88; }
+
+        /* STAR BUTTON */
+        .star-btn {
+            background: none; border: 1px solid #2a2a2a; cursor: pointer;
+            color: #444; font-size: 0.9rem; padding: 4px 9px; border-radius: 6px;
+            transition: all 0.15s; line-height: 1; display: flex; align-items: center; gap: 4px;
+            font-weight: 700; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .star-btn:hover { color: var(--gold); border-color: var(--gold); }
+        .star-btn.starred { color: var(--gold); border-color: var(--gold); background: rgba(255,215,0,0.06); }
+
+        /* LOCK GATE */
+        .lock-gate {
+            text-align: center; padding: 60px 20px;
+            background: #080808; border: 1px solid var(--border);
+            border-radius: 20px; margin-bottom: 20px;
+        }
+        .lock-icon-big { font-size: 3rem; margin-bottom: 18px; }
+        .lock-title { font-size: 1.2rem; font-weight: 900; margin-bottom: 10px; }
+        .lock-sub {
+            font-size: 0.78rem; color: var(--dim); margin-bottom: 26px;
+            max-width: 380px; margin-left: auto; margin-right: auto; line-height: 1.65;
+        }
+        .lock-upgrade-btn {
+            background: var(--green); color: #000; border: none;
+            border-radius: 12px; padding: 14px 32px;
+            font-weight: 900; font-size: 0.82rem; text-transform: uppercase;
+            cursor: pointer; letter-spacing: 1px; transition: opacity 0.2s;
+        }
+        .lock-upgrade-btn:hover { opacity: 0.88; }
+
+        /* ANALYSIS LOADING */
+        .ai-loading {
+            grid-column: span 2;
+            background: #0c0c0c;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+        }
+        .ai-loading-title {
+            font-size: 0.58rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--green); margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .ai-loading-title::before {
+            content: ''; width: 6px; height: 6px; background: var(--green);
+            border-radius: 50%; animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+        .progress-track {
+            background: #1a1a1a; border-radius: 100px;
+            height: 5px; overflow: hidden; margin-bottom: 16px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--green-dark), var(--green));
+            border-radius: 100px;
+            animation: progress 9s ease-out forwards;
+            width: 0;
+        }
+        @keyframes progress {
+            0%   { width: 0%; }
+            20%  { width: 28%; }
+            50%  { width: 58%; }
+            80%  { width: 82%; }
+            100% { width: 91%; }
+        }
+
+        .ai-steps { display: flex; flex-direction: column; gap: 9px; }
+        .ai-step {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.7rem; font-weight: 700; color: var(--dim);
+            transition: color 0.5s;
+        }
+        .ai-step.active { color: #fff; }
+        .ai-step.done { color: var(--green); }
+        .ai-step-icon { font-size: 0.65rem; width: 14px; text-align: center; flex-shrink: 0; }
+
+        /* GAME SCORE DISPLAY */
+        .live-score-row {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 14px;
+        }
+        .live-score-team {
+            display: flex; flex-direction: column;
+            align-items: center; flex: 1;
+        }
+        .live-score-name { font-size: 0.65rem; color: var(--dim); font-weight: 700; margin-bottom: 3px; }
+        .live-score-num { font-size: 1.6rem; font-weight: 900; font-family: monospace; }
+        .live-score-num.winning { color: var(--green); }
+        .live-score-divider {
+            font-size: 0.6rem; color: var(--dim); font-weight: 700;
+            text-align: center; flex-shrink: 0; padding: 0 10px;
+        }
+        .live-clock {
+            background: rgba(57,255,20,0.08); border: 1px solid rgba(57,255,20,0.2);
+            color: var(--green); font-size: 0.6rem; font-weight: 900;
+            padding: 3px 10px; border-radius: 100px; text-align: center;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+            display: inline-block;
+        }
+        .final-badge {
+            background: #1a1a1a; border: 1px solid var(--border);
+            color: var(--dim); font-size: 0.6rem; font-weight: 900;
+            padding: 3px 10px; border-radius: 100px; text-align: center;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        /* PULSE */
+        .pulse { animation: pulse 1.2s infinite ease-in-out; }
+        @keyframes pulse { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+        /* ═══════════════════════════════════════════════════════
+           PRICING MODAL
+        ═══════════════════════════════════════════════════════ */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.88); backdrop-filter: blur(10px);
+            z-index: 6000; display: none;
+            align-items: flex-start; justify-content: center;
+            overflow-y: auto; padding: 30px 16px;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: #080808; border: 1px solid var(--border);
+            border-radius: 24px; width: 100%; max-width: 960px;
+            position: relative; margin: auto;
+            animation: modalIn 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes modalIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+        .modal-close {
+            position: absolute; top: 16px; right: 18px;
+            background: #1a1a1a; border: 1px solid var(--border);
+            color: var(--dim); width: 30px; height: 30px; border-radius: 50%;
+            cursor: pointer; font-size: 0.78rem; display: flex;
+            align-items: center; justify-content: center; transition: all 0.15s; z-index: 1;
+        }
+        .modal-close:hover { color: #fff; border-color: #555; }
+
+        .pricing-header {
+            text-align: center; padding: 40px 30px 32px;
+            border-bottom: 1px solid var(--border);
+        }
+        .pricing-title {
+            font-size: 1.9rem; font-weight: 900; font-style: italic;
+            text-transform: uppercase; letter-spacing: -1px; margin-bottom: 8px;
+        }
+        .pricing-sub {
+            font-size: 0.65rem; color: var(--dim); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+
+        .pricing-cards {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; padding: 28px 24px 8px;
+        }
+
+        .tier-card {
+            background: #0c0c0c; border: 1px solid var(--border);
+            border-radius: 18px; padding: 24px 18px;
+            display: flex; flex-direction: column; position: relative;
+            transition: border-color 0.2s;
+        }
+        .tier-card.featured {
+            border-color: var(--green);
+            background: linear-gradient(160deg, #080808 0%, #0b1a0b 100%);
+        }
+        .tier-badge {
+            background: var(--green); color: #000;
+            font-size: 0.45rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 1.5px; padding: 4px 10px; border-radius: 100px;
+            display: inline-block; margin-bottom: 14px; align-self: flex-start;
+        }
+        .tier-name {
+            font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 2.5px; color: var(--dim); margin-bottom: 10px;
+        }
+        .tier-card.featured .tier-name { color: var(--green); }
+        .tier-price-main {
+            font-size: 2.4rem; font-weight: 900; font-style: italic;
+            line-height: 1; letter-spacing: -2px; margin-bottom: 4px;
+        }
+        .tier-cents { font-size: 1.1rem; vertical-align: super; }
+        .tier-price-freq {
+            font-size: 0.6rem; color: var(--dim); font-weight: 700;
+            margin-bottom: 22px;
+        }
+        .tier-features {
+            flex: 1; display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px;
+        }
+        .tf {
+            display: flex; align-items: flex-start; gap: 8px;
+            font-size: 0.72rem; line-height: 1.4;
+        }
+        .tf-check { color: var(--green); font-size: 0.7rem; flex-shrink: 0; margin-top: 1px; }
+        .tf-cross { color: #333; font-size: 0.7rem; flex-shrink: 0; margin-top: 1px; }
+        .tf.off { color: #444; }
+
+        .tier-cta {
+            width: 100%; padding: 11px; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 0.5px; cursor: pointer; border: none;
+            transition: opacity 0.2s; margin-top: auto;
+        }
+        .tier-cta-default { background: #1e1e1e; border: 1px solid var(--border); color: var(--dim); cursor: default; }
+        .tier-cta-green { background: var(--green); color: #000; }
+        .tier-cta-green:hover { opacity: 0.88; }
+        .tier-cta-current { background: rgba(57,255,20,0.08); border: 1px solid rgba(57,255,20,0.2); color: var(--green); cursor: default; }
+
+        /* Email checkout form */
+        .checkout-form {
+            display: none; padding: 0 24px 28px;
+        }
+        .checkout-inner {
+            background: #0c0c0c; border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px;
+        }
+        .checkout-label {
+            font-size: 0.62rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--dim); margin-bottom: 14px;
+        }
+        .checkout-row { display: flex; gap: 10px; }
+        .checkout-email {
+            flex: 1; background: #111; border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 14px; color: #fff;
+            font-size: 0.82rem; outline: none;
+        }
+        .checkout-email:focus { border-color: var(--green); }
+        .checkout-submit {
+            background: var(--green); color: #000; border: none;
+            border-radius: 8px; padding: 10px 20px;
+            font-weight: 900; font-size: 0.72rem; text-transform: uppercase; cursor: pointer;
+            white-space: nowrap;
+        }
+        .checkout-err { color: #ff4444; font-size: 0.65rem; margin-top: 8px; display: none; }
+
+        /* Account modal */
+        .account-box { max-width: 440px; }
+        .acct-section { padding: 24px 26px; border-bottom: 1px solid var(--border); }
+        .acct-section:last-child { border-bottom: none; }
+        .acct-label {
+            font-size: 0.56rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--dim); margin-bottom: 14px;
+        }
+        .usage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .usage-cell {
+            background: #111; border: 1px solid #1e1e1e;
+            border-radius: 10px; padding: 14px;
+        }
+        .usage-cell-label { font-size: 0.52rem; color: var(--dim); font-weight: 900; text-transform: uppercase; margin-bottom: 6px; }
+        .usage-cell-num { font-size: 1.5rem; font-weight: 900; }
+        .usage-cell-max { font-size: 0.56rem; color: var(--dim); margin-top: 2px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 860px) {
+            .analysis-grid { grid-template-columns: 1fr; }
+            .intel-panel { position: relative; top: 0; }
+        }
+        @media (max-width: 700px) {
+            .pricing-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .logo { font-size: 2.4rem; }
+            .games-grid { grid-template-columns: 1fr; }
+            .game-header-teams { font-size: 1.1rem; }
+        }
+        @media (max-width: 420px) {
+            .pricing-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="fixed-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+    <div class="ticker-wrap">
+        <div class="ticker" id="mainTicker">
+            <div class="ticker-item">FADEODDS AI <span class="t-green">LIVE</span></div>
+            <div class="ticker-item">NBA · NCAAB · NFL · NHL · MLB <span class="t-gold">ALL SPORTS</span></div>
+            <div class="ticker-item">REAL-TIME ODDS · AI ANALYSIS <span class="t-green">ACTIVE</span></div>
+            <div class="ticker-item">ALWAYS GAMBLE RESPONSIBLY <span class="t-gold">21+</span></div>
+            <div class="ticker-item">FADEODDS AI <span class="t-green">LIVE</span></div>
+            <div class="ticker-item">NBA · NCAAB · NFL · NHL · MLB <span class="t-gold">ALL SPORTS</span></div>
+            <div class="ticker-item">REAL-TIME ODDS · AI ANALYSIS <span class="t-green">ACTIVE</span></div>
+            <div class="ticker-item">ALWAYS GAMBLE RESPONSIBLY <span class="t-gold">21+</span></div>
+        </div>
+    </div>
+</header>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<aside id="sidebarTray" class="sidebar-tray">
+
+    <div class="sidebar-head">
+        <div class="sidebar-logo">FADE<span style="color:var(--green)">ODDS</span></div>
+    </div>
+
+    <div class="sidebar-tabs">
+        <div class="sidebar-tab active" id="tabTracker" onclick="switchSidebarTab('tracker')">Bet Tracker</div>
+        <div class="sidebar-tab" id="tabHistory" onclick="switchSidebarTab('history')">History</div>
+    </div>
+
+    <div class="sidebar-body">
+
+        <!-- BET TRACKER PANEL -->
+        <div id="trackerPanel">
+            <div class="bet-filter-row">
+                <div class="bet-filter active" id="filterActive" onclick="switchBetFilter('active')">Active</div>
+                <div class="bet-filter" id="filterArchived" onclick="switchBetFilter('archived')">Archived</div>
+            </div>
+            <div id="betTrackerItems">
+                <div style="font-size:0.7rem;color:var(--dim);text-align:center;padding:30px 0">
+                    No saved bets yet.<br>Star a book line while analyzing a game.
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY PANEL -->
+        <div id="historyList" style="display:none">
+            <div style="font-size:0.58rem;color:var(--dim);font-weight:900;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px">Session History</div>
+            <div id="historyItems" style="font-size:0.72rem;color:var(--dim)">No history yet</div>
+        </div>
+
+    </div>
+
+    <!-- PROTOTYPE SETTINGS -->
+    <div class="proto-section">
+        <div class="proto-toggle" onclick="toggleProtoPanel()">
+            <div class="proto-toggle-label">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                Prototype Settings
+            </div>
+            <span class="proto-chevron" id="protoChevron">▼</span>
+        </div>
+        <div class="proto-body" id="protoBody">
+            <div class="proto-credit">
+                <div>
+                    <div class="proto-credit-label">Odds API Credits Remaining</div>
+                    <div class="proto-credit-val" id="protoCreditVal">—</div>
+                </div>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+                </svg>
+            </div>
+            <div class="proto-tier-label">Simulate Tier</div>
+            <div class="proto-tier-grid">
+                <button class="proto-tier-btn" id="ptFree" onclick="setProtoTier('free')">Free</button>
+                <button class="proto-tier-btn" id="ptGo"   onclick="setProtoTier('go')">Go</button>
+                <button class="proto-tier-btn" id="ptPlus" onclick="setProtoTier('plus')">Plus</button>
+                <button class="proto-tier-btn active" id="ptPro" onclick="setProtoTier('pro')">Pro ✓</button>
+            </div>
+            <div style="font-size:0.52rem;color:#333;margin-top:10px;line-height:1.6;font-weight:700">
+                Simulates tier behavior without affecting real subscriptions.
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <div style="display:flex;align-items:center;gap:12px">
+            <div class="avatar" onclick="openAccount()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                <div class="status-dot"></div>
+            </div>
+            <div>
+                <div style="font-size:0.8rem;font-weight:900" id="sidebarTierName">Free</div>
+                <div style="font-size:0.6rem;color:var(--gold);font-weight:700;text-transform:uppercase" id="sidebarTierBadge">Click to Upgrade</div>
+            </div>
+        </div>
+        <div id="creditsDisplay" style="margin-top:10px;font-size:0.56rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px"></div>
+    </div>
+</aside>
+
+<main class="main-content">
+
+    <!-- HOME STATE -->
+    <div id="homeState">
+        <div class="logo">FADE<span class="logo-accent">ODDS</span></div>
+        <p style="text-align:center;font-size:0.62rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:6px 0 0">
+            Live Odds &middot; AI Analysis &middot; Sharp Intelligence
+        </p>
+
+        <div class="sport-tabs">
+            <button class="sport-tab active" data-sport="basketball_nba" onclick="switchSport(this)">🏀 NBA</button>
+            <button class="sport-tab" data-sport="basketball_ncaab" onclick="switchSport(this)">🏀 NCAAB</button>
+            <button class="sport-tab" data-sport="americanfootball_nfl" onclick="switchSport(this)">🏈 NFL</button>
+            <button class="sport-tab" data-sport="icehockey_nhl" onclick="switchSport(this)">🏒 NHL</button>
+            <button class="sport-tab" data-sport="baseball_mlb" onclick="switchSport(this)">⚾ MLB</button>
+        </div>
+
+        <div class="games-section">
+            <div class="section-label" id="sectionLabel">Loading Games</div>
+            <div id="gamesGrid">
+                <div class="games-grid">
+                    <div class="skeleton"></div><div class="skeleton"></div>
+                    <div class="skeleton"></div><div class="skeleton"></div>
+                    <div class="skeleton"></div><div class="skeleton"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANALYSIS STATE -->
+    <div class="analysis-container" id="analysisState">
+        <div class="game-header">
+            <div>
+                <div class="game-header-teams" id="analysisTitle">—</div>
+                <div class="game-header-meta" id="analysisMeta">—</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="conf-badge" id="confBadge" style="display:none">—</div>
+                <button class="back-btn" onclick="goHome()">← Back to Games</button>
+            </div>
+        </div>
+
+        <!-- FREE TIER LOCK GATE -->
+        <div id="lockGate" style="display:none" class="lock-gate">
+            <div class="lock-icon-big">🔒</div>
+            <div class="lock-title" id="lockTitle">Unlock Full Analysis</div>
+            <div class="lock-sub" id="lockSub">
+                AI-powered game analysis, multi-book odds comparison, injury reports, and more — available on paid plans starting at $4.99/mo.
+            </div>
+            <button class="lock-upgrade-btn" onclick="openPricing()">See Plans →</button>
+        </div>
+
+        <div class="analysis-grid" id="analysisGrid">
+            <!-- LEFT: Intel + Chat -->
+            <div class="intel-panel">
+                <div class="panel-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    Neural Intelligence
+                </div>
+
+                <div id="intelTiles" class="intel-tiles">
+                    <div class="intel-tile hl pulse" style="grid-column:span 2;height:80px"></div>
+                </div>
+
+                <div id="recBox" class="rec-box" style="display:none">
+                    <div>
+                        <div class="rec-label">Top Recommendation</div>
+                        <div class="rec-val" id="recVal">—</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div class="rec-label">Edge</div>
+                        <div style="font-size:0.72rem;color:#aaa;font-weight:700;margin-top:4px" id="edgeVal">—</div>
+                    </div>
+                </div>
+
+                <div class="expert-take" id="expertTake"></div>
+
+                <div id="injuryPanel"></div>
+
+                <div class="chat-window" id="chatWindow"></div>
+                <div class="chat-input-row">
+                    <input id="chatInput" type="text" placeholder="Ask a sharp follow-up..." onkeydown="if(event.key==='Enter')sendChat()">
+                    <div class="send-btn" onclick="sendChat()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Real odds from books -->
+            <div class="odds-panel" id="oddsPanel"></div>
+        </div>
+    </div>
+
+    <footer style="text-align:center;padding:60px 20px 40px;max-width:700px;margin:0 auto">
+        <p style="font-size:0.58rem;color:var(--dim);text-transform:uppercase;font-weight:700;line-height:2.2">
+            FadeOdds is an AI analytical tool. All insights are informational only.<br>
+            Not financial advice. Must be 21+ to gamble. Odds subject to change.
+        </p>
+        <a href="https://www.ncpgambling.org" target="_blank" style="display:inline-block;margin-top:14px;padding:6px 16px;border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:0.62rem;font-weight:900;text-decoration:none">
+            Problem Gambling? Call 1-800-GAMBLER
+        </a>
+    </footer>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     PRICING MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="pricingModal" class="modal-overlay" onclick="if(event.target===this)closePricing()">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closePricing()">✕</button>
+
+        <div class="pricing-header">
+            <div class="pricing-title">UPGRADE YOUR <span style="color:var(--green)">EDGE</span></div>
+            <div class="pricing-sub">No contracts &middot; Cancel anytime &middot; Billed monthly</div>
+        </div>
+
+        <div class="pricing-cards">
+
+            <!-- FREE -->
+            <div class="tier-card">
+                <div class="tier-name">Free</div>
+                <div class="tier-price-main">$0</div>
+                <div class="tier-price-freq">Forever free</div>
+                <div class="tier-features">
+                    <div class="tf"><span class="tf-check">✓</span>Live odds ticker</div>
+                    <div class="tf"><span class="tf-check">✓</span>Game card previews</div>
+                    <div class="tf off"><span class="tf-cross">✗</span>Multi-book odds detail</div>
+                    <div class="tf off"><span class="tf-cross">✗</span>AI game analysis</div>
+                    <div class="tf off"><span class="tf-cross">✗</span>AI chat follow-ups</div>
+                    <div class="tf off"><span class="tf-cross">✗</span>ESPN injury reports</div>
+                    <div class="tf off"><span class="tf-cross">✗</span>Bet tracker &amp; favorites</div>
+                    <div class="tf"><span class="tf-check">✓</span>NBA only</div>
+                </div>
+                <div id="ctaFree"></div>
+            </div>
+
+            <!-- GO -->
+            <div class="tier-card">
+                <div class="tier-name">Go</div>
+                <div class="tier-price-main">$4<span class="tier-cents">.99</span></div>
+                <div class="tier-price-freq">/month</div>
+                <div class="tier-features">
+                    <div class="tf"><span class="tf-check">✓</span>Live odds ticker</div>
+                    <div class="tf"><span class="tf-check">✓</span>Game card previews</div>
+                    <div class="tf"><span class="tf-check">✓</span>Multi-book odds detail</div>
+                    <div class="tf"><span class="tf-check">✓</span>3 AI analyses / day</div>
+                    <div class="tf"><span class="tf-check">✓</span>10 AI questions / day</div>
+                    <div class="tf"><span class="tf-check">✓</span>ESPN injury reports</div>
+                    <div class="tf"><span class="tf-check">✓</span>Bet tracker &amp; favorites</div>
+                    <div class="tf"><span class="tf-check">✓</span>All sports</div>
+                </div>
+                <div id="ctaGo"></div>
+            </div>
+
+            <!-- PLUS (featured) -->
+            <div class="tier-card featured">
+                <div class="tier-badge">Most Popular</div>
+                <div class="tier-name">Plus</div>
+                <div class="tier-price-main">$8<span class="tier-cents">.99</span></div>
+                <div class="tier-price-freq">/month</div>
+                <div class="tier-features">
+                    <div class="tf"><span class="tf-check">✓</span>Live odds ticker</div>
+                    <div class="tf"><span class="tf-check">✓</span>Game card previews</div>
+                    <div class="tf"><span class="tf-check">✓</span>Multi-book odds detail</div>
+                    <div class="tf"><span class="tf-check">✓</span>10 AI analyses / day</div>
+                    <div class="tf"><span class="tf-check">✓</span>100 AI questions / day</div>
+                    <div class="tf"><span class="tf-check">✓</span>ESPN injury reports</div>
+                    <div class="tf"><span class="tf-check">✓</span>Bet tracker &amp; favorites</div>
+                    <div class="tf"><span class="tf-check">✓</span>All sports</div>
+                </div>
+                <div id="ctaPlus"></div>
+            </div>
+
+            <!-- PRO -->
+            <div class="tier-card">
+                <div class="tier-name">Pro</div>
+                <div class="tier-price-main">$16<span class="tier-cents">.99</span></div>
+                <div class="tier-price-freq">/month</div>
+                <div class="tier-features">
+                    <div class="tf"><span class="tf-check">✓</span>Live odds ticker</div>
+                    <div class="tf"><span class="tf-check">✓</span>Game card previews</div>
+                    <div class="tf"><span class="tf-check">✓</span>Multi-book odds detail</div>
+                    <div class="tf"><span class="tf-check">✓</span>Unlimited AI analyses</div>
+                    <div class="tf"><span class="tf-check">✓</span>5,000 AI questions / day</div>
+                    <div class="tf"><span class="tf-check">✓</span>ESPN injury reports</div>
+                    <div class="tf"><span class="tf-check">✓</span>Bet tracker &amp; favorites</div>
+                    <div class="tf"><span class="tf-check">✓</span>All sports</div>
+                </div>
+                <div id="ctaPro"></div>
+            </div>
+
+        </div>
+
+        <!-- Email checkout form -->
+        <div class="checkout-form" id="checkoutForm">
+            <div class="checkout-inner">
+                <div class="checkout-label" id="checkoutLabel">Enter your email to continue</div>
+                <div class="checkout-row">
+                    <input class="checkout-email" id="checkoutEmail" type="email" placeholder="your@email.com">
+                    <button class="checkout-submit" id="checkoutBtn" onclick="startCheckout()">Continue →</button>
+                </div>
+                <div class="checkout-err" id="checkoutErr"></div>
+            </div>
+        </div>
+
+        <div style="text-align:center;padding:4px 24px 26px;font-size:0.58rem;color:#333;font-weight:700">
+            Secured by Stripe &middot; 256-bit SSL encryption &middot; Cancel anytime from your account
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ACCOUNT MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="accountModal" class="modal-overlay" onclick="if(event.target===this)closeAccount()">
+    <div class="modal-box account-box">
+        <button class="modal-close" onclick="closeAccount()">✕</button>
+
+        <div class="acct-section">
+            <div class="acct-label">Your Account</div>
+            <div style="font-size:1.5rem;font-weight:900;font-style:italic" id="acctTierDisplay">Free</div>
+            <div style="font-size:0.65rem;color:var(--dim);margin-top:4px" id="acctEmailDisplay">—</div>
+        </div>
+
+        <div class="acct-section">
+            <div class="acct-label">Today's Usage</div>
+            <div class="usage-grid">
+                <div class="usage-cell">
+                    <div class="usage-cell-label">AI Analyses</div>
+                    <div class="usage-cell-num" id="acctGames">0</div>
+                    <div class="usage-cell-max" id="acctGamesMax">/ 0 today</div>
+                </div>
+                <div class="usage-cell">
+                    <div class="usage-cell-label">AI Questions</div>
+                    <div class="usage-cell-num" id="acctQuestions">0</div>
+                    <div class="usage-cell-max" id="acctQuestionsMax">/ 0 today</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="acct-section" style="display:flex;gap:10px;flex-wrap:wrap">
+            <button id="acctUpgradeBtn" onclick="closeAccount();openPricing()"
+                style="flex:1;padding:11px;background:var(--green);color:#000;border:none;border-radius:8px;font-weight:900;font-size:0.72rem;text-transform:uppercase;cursor:pointer">
+                Upgrade Plan →
+            </button>
+            <button id="acctManageBtn" onclick="openCustomerPortal()" style="display:none;flex:1;padding:11px;background:#1a1a1a;border:1px solid var(--border);color:#ccc;border-radius:8px;font-weight:900;font-size:0.72rem;text-transform:uppercase;cursor:pointer">
+                Manage Subscription
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── STATE ─────────────────────────────────────────────────────
+    let currentSport = 'basketball_nba';
+    let allGames = [];
+    let selectedGame = null;
+    let sessionHistory = [];
+    let currentGameInjuries = [];
+    let currentCheckoutTier = null;
+    let currentBetFilter = 'active';
+    let currentSidebarTab = 'tracker';
+
+    const oddsCache   = {};  // { [sport]: { data, ts } }
+    const injuryCache = {};  // { [sport]: { data, ts } }
+    const ODDS_TTL    = 24 * 60 * 60 * 1000;  // 24 hours
+    const INJURY_TTL  = 30 * 60 * 1000;        // 30 minutes
+
+    // ── TIER CONFIG ───────────────────────────────────────────────
+    const LS_TIER     = 'fo_tier';
+    const LS_CUSTOMER = 'fo_customer';
+    const LS_EMAIL    = 'fo_email';
+    const LS_VERIFIED = 'fo_verified';
+    const LS_USAGE    = 'fo_usage';
+    const LS_FAVS     = 'fo_favs';
+
+    const TIER_LIMITS = {
+        free: { games: 0,        questions: 0 },
+        go:   { games: 3,        questions: 10 },
+        plus: { games: 10,       questions: 100 },
+        pro:  { games: Infinity, questions: 5000 },
+    };
+    const TIER_LABELS = { free: 'Free', go: 'Go', plus: 'Plus', pro: 'Pro' };
+    const TIER_BADGES = { free: 'Click to Upgrade', go: 'Go Member', plus: 'Plus Member', pro: 'Pro Member' };
+
+    function userTier() { return localStorage.getItem(LS_TIER) || 'free'; }
+
+    function getUsage() {
+        const today = new Date().toISOString().slice(0, 10);
+        try {
+            const raw = localStorage.getItem(LS_USAGE);
+            if (!raw) return { date: today, games: 0, questions: 0 };
+            const u = JSON.parse(raw);
+            return u.date === today ? u : { date: today, games: 0, questions: 0 };
+        } catch { return { date: today, games: 0, questions: 0 }; }
+    }
+
+    function incrementUsage(field) {
+        const u = getUsage();
+        u[field] = (u[field] || 0) + 1;
+        localStorage.setItem(LS_USAGE, JSON.stringify(u));
+    }
+
+    function canAnalyzeGame() {
+        const t = userTier();
+        const lim = TIER_LIMITS[t];
+        if (!lim || lim.games === 0) return false;
+        if (lim.games === Infinity) return true;
+        return getUsage().games < lim.games;
+    }
+
+    function canAskQuestion() {
+        const t = userTier();
+        const lim = TIER_LIMITS[t];
+        if (!lim || lim.questions === 0) return false;
+        if (lim.questions === Infinity) return true;
+        return getUsage().questions < lim.questions;
+    }
+
+    function updateSidebarTierDisplay() {
+        const t = userTier();
+        const nameEl = document.getElementById('sidebarTierName');
+        const badgeEl = document.getElementById('sidebarTierBadge');
+        if (nameEl) nameEl.textContent = TIER_LABELS[t] || 'Free';
+        if (badgeEl) badgeEl.textContent = TIER_BADGES[t] || 'Click to Upgrade';
+    }
+
+    // ── SIDEBAR ──────────────────────────────────────────────────
+    function toggleSidebar() {
+        document.getElementById('sidebarTray').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+        if (document.getElementById('sidebarTray').classList.contains('open')) {
+            renderBetTracker();
+        }
+    }
+
+    function switchSidebarTab(tab) {
+        currentSidebarTab = tab;
+        document.getElementById('tabTracker').classList.toggle('active', tab === 'tracker');
+        document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+        document.getElementById('trackerPanel').style.display = tab === 'tracker' ? 'block' : 'none';
+        document.getElementById('historyList').style.display = tab === 'history' ? 'block' : 'none';
+        if (tab === 'tracker') renderBetTracker();
+    }
+
+    function switchBetFilter(filter) {
+        currentBetFilter = filter;
+        document.getElementById('filterActive').classList.toggle('active', filter === 'active');
+        document.getElementById('filterArchived').classList.toggle('active', filter === 'archived');
+        renderBetTracker();
+    }
+
+    // ── SPORT SWITCHING ──────────────────────────────────────────
+    function switchSport(btn) {
+        document.querySelectorAll('.sport-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSport = btn.dataset.sport;
+        loadGames(currentSport);
+    }
+
+    // ── LOAD GAMES ───────────────────────────────────────────────
+    let scoreCache = {};
+
+    async function loadGames(sport) {
+        const grid = document.getElementById('gamesGrid');
+        const label = document.getElementById('sectionLabel');
+
+        // Serve from odds cache if still fresh (24h)
+        const cached = oddsCache[sport];
+        if (cached && Date.now() - cached.ts < ODDS_TTL) {
+            allGames = cached.data;
+            renderGames(cached.data);
+            // Refresh scores silently (free endpoint)
+            fetch(`/api/scores?sport=${sport}`)
+                .then(r => r.ok ? r.json() : [])
+                .then(scores => {
+                    scoreCache = {};
+                    (scores || []).forEach(s => { scoreCache[makeKey(s.awayTeam, s.homeTeam)] = s; });
+                }).catch(() => {});
+            // Refresh injuries if stale
+            if (!injuryCache[sport] || Date.now() - injuryCache[sport].ts > INJURY_TTL) {
+                fetch(`/api/injuries?sport=${sport}`)
+                    .then(r => r.ok ? r.json() : { injuries: [] })
+                    .then(d => { injuryCache[sport] = { data: d.injuries || [], ts: Date.now() }; })
+                    .catch(() => {});
+            }
+            const age = Math.round((Date.now() - cached.ts) / 60000);
+            label.textContent = `${cached.data.length} Upcoming Games · Odds cached ${age}m ago`;
+            updateCreditsDisplay();
+            return;
+        }
+
+        grid.innerHTML = `<div class="games-grid">${Array(6).fill('<div class="skeleton"></div>').join('')}</div>`;
+        label.textContent = 'Loading Games...';
+
+        try {
+            const [oddsRes, scoresRes, injRes] = await Promise.all([
+                fetch(`/api/odds?sport=${sport}`),
+                fetch(`/api/scores?sport=${sport}`),
+                fetch(`/api/injuries?sport=${sport}`)
+            ]);
+
+            if (!oddsRes.ok) throw new Error(`HTTP ${oddsRes.status}`);
+            const games = await oddsRes.json();
+            if (games.error) throw new Error(games.error);
+
+            // Credits remaining
+            const creditsLeft = oddsRes.headers.get('x-requests-remaining');
+            if (creditsLeft && creditsLeft !== 'unknown') {
+                sessionStorage.setItem('oddsCredits', creditsLeft);
+            }
+            updateCreditsDisplay();
+
+            // Cache odds (24h)
+            oddsCache[sport] = { data: games, ts: Date.now() };
+
+            // Scores
+            if (scoresRes.ok) {
+                const scores = await scoresRes.json();
+                scoreCache = {};
+                (scores || []).forEach(s => { scoreCache[makeKey(s.awayTeam, s.homeTeam)] = s; });
+            }
+
+            // Injuries (ESPN, free)
+            if (injRes.ok) {
+                const injData = await injRes.json();
+                injuryCache[sport] = { data: injData.injuries || [], ts: Date.now() };
+            }
+
+            allGames = games;
+            renderGames(games);
+        } catch (err) {
+            label.textContent = 'Error Loading Games';
+            grid.innerHTML = `
+                <div style="text-align:center;padding:60px 20px;color:var(--dim)">
+                    <div style="font-size:2rem;margin-bottom:12px">⚠️</div>
+                    <div style="font-weight:700;margin-bottom:8px">Could not load games</div>
+                    <div style="font-size:0.72rem">${err.message}</div>
+                    <button onclick="loadGames('${sport}')" style="margin-top:16px;padding:8px 20px;background:var(--card);border:1px solid var(--border);color:#fff;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:700">
+                        Retry
+                    </button>
+                </div>`;
+        }
+    }
+
+    function updateCreditsDisplay() {
+        const el = document.getElementById('creditsDisplay');
+        if (!el) return;
+        const c = sessionStorage.getItem('oddsCredits');
+        el.textContent = c ? `${c} Odds API credits left` : '';
+    }
+
+    function getGameInjuries(game) {
+        const sportInjuries = injuryCache[currentSport]?.data || [];
+        if (!sportInjuries.length) return [];
+        const awayLast = lastWord(game.away_team).toLowerCase();
+        const homeLast = lastWord(game.home_team).toLowerCase();
+        return sportInjuries.filter(inj => {
+            const t = inj.team.toLowerCase();
+            return t.includes(awayLast) || t.includes(homeLast)
+                || awayLast.includes(lastWord(t).toLowerCase())
+                || homeLast.includes(lastWord(t).toLowerCase());
+        });
+    }
+
+    function makeKey(away, home) {
+        return `${lastWord(away)}_${lastWord(home)}`.toLowerCase();
+    }
+
+    function lastWord(name) {
+        if (!name) return '';
+        return name.trim().split(' ').pop();
+    }
+
+    function getScore(game) {
+        return scoreCache[makeKey(game.away_team, game.home_team)] || null;
+    }
+
+    function renderGames(games) {
+        const grid = document.getElementById('gamesGrid');
+        const label = document.getElementById('sectionLabel');
+
+        if (!games || games.length === 0) {
+            label.textContent = 'No Upcoming Games';
+            grid.innerHTML = `
+                <div style="text-align:center;padding:60px 20px;color:var(--dim)">
+                    <div style="font-size:2rem;margin-bottom:12px">📅</div>
+                    <div style="font-weight:700">No upcoming games right now</div>
+                    <div style="font-size:0.72rem;margin-top:8px">Try another sport or check back later</div>
+                </div>`;
+            return;
+        }
+
+        label.textContent = `${games.length} Upcoming Games`;
+        grid.innerHTML = `<div class="games-grid">${games.map(g => gameCardHTML(g)).join('')}</div>`;
+        updateTicker(games);
+    }
+
+    function gameCardHTML(game) {
+        const books = game.bookmakers || [];
+        let spread = '—', mlDisplay = '—', total = '—';
+        let awayML = null, homeML = null;
+
+        const findMarket = (key) => {
+            for (const b of books) {
+                const m = b.markets?.find(m => m.key === key);
+                if (m?.outcomes?.length) return m;
+            }
+            return null;
+        };
+
+        const h2h = findMarket('h2h');
+        const spreads = findMarket('spreads');
+        const totals = findMarket('totals');
+
+        if (h2h) {
+            const away = h2h.outcomes.find(o => o.name === game.away_team);
+            const home = h2h.outcomes.find(o => o.name === game.home_team);
+            awayML = away?.price;
+            homeML = home?.price;
+            mlDisplay = `${fmt(awayML)} / ${fmt(homeML)}`;
+        }
+        if (spreads) {
+            const fav = spreads.outcomes.find(o => o.point < 0) || spreads.outcomes[0];
+            if (fav) spread = `${shortName(fav.name)} ${fav.point > 0 ? '+' : ''}${fav.point}`;
+        }
+        if (totals) {
+            const over = totals.outcomes.find(o => o.name === 'Over');
+            if (over) total = `O/U ${over.point}`;
+        }
+
+        const score = getScore(game);
+        const isLive = score?.isLive;
+        const isFinal = score?.isFinal;
+
+        let topSection = '';
+        if (isLive && score.homeScore !== null) {
+            const awayWinning = Number(score.awayScore) > Number(score.homeScore);
+            const homeWinning = Number(score.homeScore) > Number(score.awayScore);
+            topSection = `
+                <div style="text-align:center;margin-bottom:4px">
+                    <span class="live-clock">🔴 ${score.periodLabel} ${score.displayClock}</span>
+                </div>
+                <div class="live-score-row">
+                    <div class="live-score-team">
+                        <div class="live-score-name">${shortTeam(game.away_team)}</div>
+                        <div class="live-score-num ${awayWinning ? 'winning' : ''}">${score.awayScore}</div>
+                    </div>
+                    <div class="live-score-divider">—</div>
+                    <div class="live-score-team">
+                        <div class="live-score-name">${shortTeam(game.home_team)}</div>
+                        <div class="live-score-num ${homeWinning ? 'winning' : ''}">${score.homeScore}</div>
+                    </div>
+                </div>`;
+        } else if (isFinal && score.homeScore !== null) {
+            const awayWon = Number(score.awayScore) > Number(score.homeScore);
+            const homeWon = Number(score.homeScore) > Number(score.awayScore);
+            topSection = `
+                <div style="text-align:center;margin-bottom:4px">
+                    <span class="final-badge">Final</span>
+                </div>
+                <div class="live-score-row">
+                    <div class="live-score-team">
+                        <div class="live-score-name">${shortTeam(game.away_team)}</div>
+                        <div class="live-score-num ${awayWon ? 'winning' : ''}">${score.awayScore}</div>
+                    </div>
+                    <div class="live-score-divider">—</div>
+                    <div class="live-score-team">
+                        <div class="live-score-name">${shortTeam(game.home_team)}</div>
+                        <div class="live-score-num ${homeWon ? 'winning' : ''}">${score.homeScore}</div>
+                    </div>
+                </div>`;
+        } else {
+            topSection = `
+                <div class="game-time">${formatTime(game.commence_time)}</div>
+                <div class="matchup">
+                    <div class="team-name away">${shortTeam(game.away_team)}</div>
+                    <div class="vs-badge">@</div>
+                    <div class="team-name home">${shortTeam(game.home_team)}</div>
+                </div>`;
+        }
+
+        return `
+            <div class="game-card" onclick="selectGame('${game.id}')">
+                ${topSection}
+                <div class="odds-row">
+                    <div class="odds-cell">
+                        <div class="odds-cell-label">Spread</div>
+                        <div class="odds-cell-val">${spread}</div>
+                    </div>
+                    <div class="odds-cell">
+                        <div class="odds-cell-label">Moneyline</div>
+                        <div class="odds-cell-val ${awayML > 0 ? 'pos' : ''}">${mlDisplay}</div>
+                    </div>
+                    <div class="odds-cell">
+                        <div class="odds-cell-label">Total</div>
+                        <div class="odds-cell-val">${total}</div>
+                    </div>
+                </div>
+                <button class="analyze-btn">⚡ Analyze with AI</button>
+                <div class="books-count">${books.length} book${books.length !== 1 ? 's' : ''} tracked</div>
+            </div>`;
+    }
+
+    // ── INJURY PANEL ─────────────────────────────────────────────
+    function renderInjuryPanel(injuries) {
+        const el = document.getElementById('injuryPanel');
+        if (!el) return;
+        if (!injuries || injuries.length === 0) { el.innerHTML = ''; return; }
+
+        const statusColor = (s) => {
+            s = (s || '').toLowerCase();
+            if (s.includes('out'))          return '#ff4444';
+            if (s.includes('doubtful'))     return '#ff8800';
+            if (s.includes('questionable')) return '#FFD700';
+            return 'var(--dim)';
+        };
+
+        el.innerHTML = `
+            <div style="margin-bottom:16px">
+                <div style="font-size:0.58rem;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#ff8800;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                    Injury Report
+                </div>
+                ${injuries.map(inj => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#0d0d0d;border-radius:8px;margin-bottom:5px;border-left:3px solid ${statusColor(inj.status)}">
+                        <div>
+                            <div style="font-size:0.75rem;font-weight:700">${escHtml(inj.player)}</div>
+                            <div style="font-size:0.56rem;color:var(--dim);margin-top:1px">${escHtml(inj.team)}${inj.injury ? ' · ' + escHtml(inj.injury) : ''}</div>
+                        </div>
+                        <div style="font-size:0.62rem;font-weight:900;color:${statusColor(inj.status)};white-space:nowrap;margin-left:8px">${escHtml(inj.status)}</div>
+                    </div>`).join('')}
+            </div>`;
+    }
+
+    // ── ANALYSIS LOADING STATE ───────────────────────────────────
+    function showAnalysisLoading() {
+        document.getElementById('intelTiles').innerHTML = `
+            <div class="ai-loading">
+                <div class="ai-loading-title">AI Market Scan</div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="ai-steps">
+                    <div class="ai-step active" id="aiStep1">
+                        <span class="ai-step-icon">◉</span> Collecting odds from all books
+                    </div>
+                    <div class="ai-step" id="aiStep2">
+                        <span class="ai-step-icon">○</span> Running market analysis
+                    </div>
+                    <div class="ai-step" id="aiStep3">
+                        <span class="ai-step-icon">○</span> Building recommendation
+                    </div>
+                </div>
+            </div>`;
+
+        setTimeout(() => {
+            const s1 = document.getElementById('aiStep1');
+            const s2 = document.getElementById('aiStep2');
+            if (!s1 || !s2) return;
+            s1.className = 'ai-step done'; s1.querySelector('.ai-step-icon').textContent = '✓';
+            s2.className = 'ai-step active'; s2.querySelector('.ai-step-icon').textContent = '◉';
+        }, 2200);
+
+        setTimeout(() => {
+            const s2 = document.getElementById('aiStep2');
+            const s3 = document.getElementById('aiStep3');
+            if (!s2 || !s3) return;
+            s2.className = 'ai-step done'; s2.querySelector('.ai-step-icon').textContent = '✓';
+            s3.className = 'ai-step active'; s3.querySelector('.ai-step-icon').textContent = '◉';
+        }, 5000);
+    }
+
+    // ── SELECT + ANALYZE GAME ────────────────────────────────────
+    async function selectGame(gameId) {
+        selectedGame = allGames.find(g => g.id === gameId);
+        if (!selectedGame) return;
+
+        // Add to session history
+        const title = `${selectedGame.away_team} @ ${selectedGame.home_team}`;
+        sessionHistory = sessionHistory.filter(h => h.title !== title);
+        sessionHistory.unshift({ title, sport: selectedGame.sport_title || currentSport });
+        renderHistory();
+
+        // Switch to analysis view
+        document.getElementById('homeState').style.display = 'none';
+        document.getElementById('analysisState').style.display = 'block';
+
+        document.getElementById('analysisTitle').textContent = title;
+        document.getElementById('analysisMeta').textContent =
+            `${selectedGame.sport_title} · ${formatTime(selectedGame.commence_time)} · ${selectedGame.bookmakers?.length || 0} Books Tracked`;
+
+        // Reset panels
+        showAnalysisLoading();
+        document.getElementById('expertTake').textContent = '';
+        document.getElementById('expertTake').classList.remove('pulse');
+        document.getElementById('chatWindow').innerHTML = '';
+        document.getElementById('injuryPanel').innerHTML = '';
+        document.getElementById('confBadge').style.display = 'none';
+        document.getElementById('recBox').style.display = 'none';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // ── TIER ENFORCEMENT ──────────────────────────────────────
+        const tier = userTier();
+        const lockGate = document.getElementById('lockGate');
+        const analysisGrid = document.getElementById('analysisGrid');
+
+        if (tier === 'free') {
+            lockGate.querySelector('.lock-title').textContent = 'Unlock Full Analysis';
+            lockGate.querySelector('.lock-sub').textContent =
+                'AI-powered game analysis, multi-book odds comparison, and injury reports — available on paid plans starting at $4.99/mo.';
+            lockGate.style.display = 'block';
+            analysisGrid.style.display = 'none';
+            return;
+        }
+
+        if (!canAnalyzeGame()) {
+            const lim = TIER_LIMITS[tier];
+            lockGate.querySelector('.lock-title').textContent = 'Daily Limit Reached';
+            lockGate.querySelector('.lock-sub').textContent =
+                `You've used all ${lim.games} AI analyses for today on your ${TIER_LABELS[tier]} plan. Upgrade for more, or come back tomorrow.`;
+            lockGate.style.display = 'block';
+            analysisGrid.style.display = 'none';
+            return;
+        }
+
+        lockGate.style.display = 'none';
+        analysisGrid.style.display = 'grid';
+        incrementUsage('games');
+
+        // Capture injuries, render odds, run analysis
+        currentGameInjuries = getGameInjuries(selectedGame);
+        renderOddsPanel(selectedGame);
+        await runAnalysis(selectedGame);
+    }
+
+    async function runAnalysis(game) {
+        try {
+            const res = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    game: {
+                        away_team: game.away_team,
+                        home_team: game.home_team,
+                        sport_title: game.sport_title,
+                        commence_time: game.commence_time
+                    },
+                    oddsData: game.bookmakers,
+                    injuryData: currentGameInjuries,
+                    mode: 'initial'
+                })
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const analysis = await res.json();
+            if (analysis.error) throw new Error(analysis.error);
+
+            // Tiles
+            document.getElementById('intelTiles').innerHTML = (analysis.tiles || []).map((t, i) => `
+                <div class="intel-tile ${i % 2 === 0 ? 'hl' : ''}">
+                    <div class="intel-tile-label">${t.label}</div>
+                    <div class="intel-tile-val">${t.val}</div>
+                </div>`).join('');
+
+            // Injury panel
+            renderInjuryPanel(currentGameInjuries);
+
+            // Expert take
+            const takeEl = document.getElementById('expertTake');
+            takeEl.textContent = analysis.expertTake || 'Analysis unavailable.';
+            takeEl.classList.remove('pulse');
+
+            // Recommendation
+            if (analysis.recommendation) {
+                document.getElementById('recVal').textContent = analysis.recommendation;
+                document.getElementById('edgeVal').textContent = analysis.edge || '—';
+                document.getElementById('recBox').style.display = 'flex';
+            }
+
+            // Confidence badge
+            if (analysis.confidence) {
+                const badge = document.getElementById('confBadge');
+                badge.textContent = `${analysis.confidence}% Confidence`;
+                badge.style.display = 'block';
+            }
+        } catch (err) {
+            document.getElementById('expertTake').textContent = `Analysis error: ${err.message}`;
+            document.getElementById('expertTake').classList.remove('pulse');
+            document.getElementById('intelTiles').innerHTML =
+                `<div style="grid-column:span 2;color:var(--dim);font-size:0.72rem;text-align:center;padding:20px">Analysis failed — try again</div>`;
+        }
+    }
+
+    // ── ODDS PANEL ───────────────────────────────────────────────
+    function renderOddsPanel(game) {
+        const panel = document.getElementById('oddsPanel');
+        const books = game.bookmakers || [];
+        const isPaid = userTier() !== 'free';
+
+        if (!books.length) {
+            panel.innerHTML = `<div style="color:var(--dim);text-align:center;padding:40px;font-size:0.8rem">No odds data available</div>`;
+            return;
+        }
+
+        const best = findBestOdds(books, game);
+
+        panel.innerHTML = books.map((book, i) => {
+            const h2h = book.markets?.find(m => m.key === 'h2h');
+            const spreads = book.markets?.find(m => m.key === 'spreads');
+            const totals = book.markets?.find(m => m.key === 'totals');
+
+            const awayML = h2h?.outcomes.find(o => o.name === game.away_team)?.price;
+            const homeML = h2h?.outcomes.find(o => o.name === game.home_team)?.price;
+            const awaySpread = spreads?.outcomes.find(o => o.name === game.away_team);
+            const overLine = totals?.outcomes.find(o => o.name === 'Over');
+
+            const isBestAway = awayML !== undefined && awayML === best.awayML;
+            const isBestTotal = overLine?.point !== undefined && overLine.point === best.total;
+
+            const favId = `${game.id}-${book.key}`;
+            const starred = isFavved(favId);
+            const starBtn = isPaid
+                ? `<button class="star-btn ${starred ? 'starred' : ''}" data-fav-id="${favId}"
+                    onclick="toggleFavBook(event,'${favId}','${escHtml(book.title)}','${escHtml(game.away_team)}','${escHtml(game.home_team)}','${game.commence_time}')">
+                    ${starred ? '★' : '☆'} Save
+                   </button>`
+                : '';
+
+            return `
+                <div class="odds-card ${i === 0 ? 'best' : ''}">
+                    <div class="odds-card-header">
+                        <div class="book-name">${book.title}</div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            ${i === 0 ? '<div class="best-badge">Sharp Pick</div>' : ''}
+                            ${starBtn}
+                        </div>
+                    </div>
+                    <div class="odds-markets">
+                        <div class="market-cell">
+                            <div class="market-label">Away ML</div>
+                            <div class="market-val ${isBestAway ? 'best-val' : ''}">${fmt(awayML)}</div>
+                            <div class="market-subval">${shortTeam(game.away_team)}</div>
+                        </div>
+                        <div class="market-cell">
+                            <div class="market-label">Spread</div>
+                            <div class="market-val">${awaySpread ? `${awaySpread.point > 0 ? '+' : ''}${awaySpread.point}` : '—'}</div>
+                            <div class="market-subval">${fmt(awaySpread?.price)}</div>
+                        </div>
+                        <div class="market-cell">
+                            <div class="market-label">O/U</div>
+                            <div class="market-val ${isBestTotal ? 'best-val' : ''}">${overLine ? overLine.point : '—'}</div>
+                            <div class="market-subval">${fmt(overLine?.price)}</div>
+                        </div>
+                    </div>
+                    <a href="#" class="bet-link" onclick="return false">Bet at ${book.title} →</a>
+                </div>`;
+        }).join('');
+    }
+
+    function toggleFavBook(e, favId, bookName, awayTeam, homeTeam, commenceTime) {
+        e.stopPropagation();
+        toggleFav({
+            id: favId,
+            type: 'line',
+            bookName,
+            awayTeam,
+            homeTeam,
+            sport: selectedGame?.sport_title || currentSport,
+            commenceTime,
+            pick: bookName,
+        });
+        // Refresh star buttons in panel
+        const btn = document.querySelector(`.star-btn[data-fav-id="${favId}"]`);
+        if (btn) {
+            const now = isFavved(favId);
+            btn.textContent = `${now ? '★' : '☆'} Save`;
+            btn.classList.toggle('starred', now);
+        }
+    }
+
+    function findBestOdds(books, game) {
+        let awayML = -Infinity, total = -Infinity;
+        books.forEach(book => {
+            const h2h = book.markets?.find(m => m.key === 'h2h');
+            const totals = book.markets?.find(m => m.key === 'totals');
+            const away = h2h?.outcomes.find(o => o.name === game.away_team)?.price;
+            if (away !== undefined && away > awayML) awayML = away;
+            const over = totals?.outcomes.find(o => o.name === 'Over')?.point;
+            if (over !== undefined && over > total) total = over;
+        });
+        return { awayML, total };
+    }
+
+    // ── CHAT ─────────────────────────────────────────────────────
+    async function sendChat() {
+        const input = document.getElementById('chatInput');
+        const win = document.getElementById('chatWindow');
+        const text = input.value.trim();
+        if (!text || !selectedGame) return;
+
+        // Tier check
+        if (!canAskQuestion()) {
+            const t = userTier();
+            const lim = TIER_LIMITS[t];
+            win.innerHTML += `<div class="msg msg-ai">You've used your ${lim.questions} daily questions on your ${TIER_LABELS[t]} plan. <a href="#" onclick="openPricing();return false;" style="color:var(--green);font-weight:900">Upgrade →</a></div>`;
+            win.scrollTop = win.scrollHeight;
+            return;
+        }
+
+        win.innerHTML += `<div class="msg msg-user">${escHtml(text)}</div>`;
+        input.value = '';
+        win.scrollTop = win.scrollHeight;
+        incrementUsage('questions');
+
+        const tid = 'typing_' + Date.now();
+        win.innerHTML += `<div class="msg msg-ai pulse" id="${tid}">Thinking...</div>`;
+        win.scrollTop = win.scrollHeight;
+
+        try {
+            const res = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    game: {
+                        away_team: selectedGame.away_team,
+                        home_team: selectedGame.home_team,
+                        sport_title: selectedGame.sport_title
+                    },
+                    oddsData: selectedGame.bookmakers,
+                    injuryData: currentGameInjuries,
+                    userQuery: text,
+                    mode: 'chat'
+                })
+            });
+            const data = await res.json();
+            document.getElementById(tid)?.remove();
+            win.innerHTML += `<div class="msg msg-ai">${escHtml(data.text || 'No response.')}</div>`;
+        } catch {
+            document.getElementById(tid)?.remove();
+            win.innerHTML += `<div class="msg msg-ai">Connection error. Try again.</div>`;
+        }
+        win.scrollTop = win.scrollHeight;
+    }
+
+    // ── NAV ──────────────────────────────────────────────────────
+    function goHome() {
+        document.getElementById('analysisState').style.display = 'none';
+        document.getElementById('homeState').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ── HISTORY ──────────────────────────────────────────────────
+    function renderHistory() {
+        const el = document.getElementById('historyItems');
+        if (!sessionHistory.length) {
+            el.innerHTML = '<span style="font-size:0.72rem;color:var(--dim)">No history yet</span>';
+            return;
+        }
+        el.innerHTML = sessionHistory.slice(0, 8).map(h => `
+            <div class="history-item" onclick="reloadFromHistory('${escHtml(h.title)}'); toggleSidebar()">
+                <div style="font-size:0.78rem;font-weight:700">${h.title}</div>
+                <div style="font-size:0.56rem;color:var(--dim);margin-top:4px;text-transform:uppercase">${h.sport} · Analyzed</div>
+            </div>`).join('');
+    }
+
+    function reloadFromHistory(title) {
+        const game = allGames.find(g => `${g.away_team} @ ${g.home_team}` === title);
+        if (game) selectGame(game.id);
+    }
+
+    // ── FAVORITES / BET TRACKER ───────────────────────────────────
+    function getFavs() {
+        try { return JSON.parse(localStorage.getItem(LS_FAVS) || '[]'); }
+        catch { return []; }
+    }
+    function saveFavs(favs) { localStorage.setItem(LS_FAVS, JSON.stringify(favs)); }
+
+    function toggleFav(fav) {
+        const favs = getFavs();
+        const idx = favs.findIndex(f => f.id === fav.id);
+        if (idx >= 0) { favs.splice(idx, 1); } else { favs.unshift({ ...fav, savedAt: Date.now() }); }
+        saveFavs(favs);
+        renderBetTracker();
+    }
+
+    function isFavved(id) { return getFavs().some(f => f.id === id); }
+
+    function removeFav(id) {
+        saveFavs(getFavs().filter(f => f.id !== id));
+        renderBetTracker();
+        // Update star if the card is visible
+        const btn = document.querySelector(`.star-btn[data-fav-id="${id}"]`);
+        if (btn) { btn.innerHTML = '☆ Save'; btn.classList.remove('starred'); }
+    }
+
+    function isActiveBet(fav) {
+        // Active = game starts in future OR within 4 hours past
+        return new Date(fav.commenceTime).getTime() + 4 * 60 * 60 * 1000 > Date.now();
+    }
+
+    function renderBetTracker() {
+        const el = document.getElementById('betTrackerItems');
+        if (!el) return;
+        const favs = getFavs();
+        const isActive = currentBetFilter === 'active';
+        const filtered = favs.filter(f => isActive ? isActiveBet(f) : !isActiveBet(f));
+
+        if (!filtered.length) {
+            el.innerHTML = `<div style="font-size:0.7rem;color:var(--dim);text-align:center;padding:30px 0;line-height:1.7">
+                ${isActive ? 'No active bets saved.<br>Star a book line while analyzing a game.' : 'No archived bets yet.'}
+            </div>`;
+            return;
+        }
+
+        el.innerHTML = filtered.map(f => `
+            <div class="bet-item">
+                <div class="bet-item-top">
+                    <div class="bet-item-book">★ ${escHtml(f.bookName || 'Saved')}</div>
+                    <button class="bet-item-remove" onclick="removeFav('${f.id}')">✕</button>
+                </div>
+                <div class="bet-item-game">${escHtml(f.awayTeam)} @ ${escHtml(f.homeTeam)}</div>
+                <div class="bet-item-time">${formatTime(f.commenceTime)} · ${escHtml(f.sport || '')}</div>
+            </div>`).join('');
+    }
+
+    // ── PRICING MODAL ─────────────────────────────────────────────
+    function openPricing() {
+        renderPricingCTAs();
+        document.getElementById('pricingModal').classList.add('open');
+        document.getElementById('checkoutForm').style.display = 'none';
+    }
+    function closePricing() { document.getElementById('pricingModal').classList.remove('open'); }
+
+    function renderPricingCTAs() {
+        const t = userTier();
+        const defs = { free: 'ctaFree', go: 'ctaGo', plus: 'ctaPlus', pro: 'ctaPro' };
+        const tierOrder = ['free', 'go', 'plus', 'pro'];
+        const tIdx = tierOrder.indexOf(t);
+
+        Object.entries(defs).forEach(([tier, elId]) => {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const thisIdx = tierOrder.indexOf(tier);
+            if (tier === t) {
+                el.innerHTML = `<button class="tier-cta tier-cta-current">Current Plan</button>`;
+            } else if (thisIdx < tIdx) {
+                el.innerHTML = `<button class="tier-cta tier-cta-default" disabled>Downgrade</button>`;
+            } else if (tier === 'free') {
+                el.innerHTML = '';
+            } else {
+                const label = { go: 'Go', plus: 'Plus', pro: 'Pro' }[tier];
+                el.innerHTML = `<button class="tier-cta tier-cta-green" onclick="selectUpgradeTier('${tier}')">Get ${label} →</button>`;
+            }
+        });
+    }
+
+    function selectUpgradeTier(tier) {
+        currentCheckoutTier = tier;
+        const label = { go: 'Go ($4.99/mo)', plus: 'Plus ($8.99/mo)', pro: 'Pro ($16.99/mo)' }[tier];
+        document.getElementById('checkoutLabel').textContent = `Upgrading to ${label} — enter your email`;
+        const form = document.getElementById('checkoutForm');
+        form.style.display = 'block';
+        const savedEmail = localStorage.getItem(LS_EMAIL) || '';
+        document.getElementById('checkoutEmail').value = savedEmail;
+        document.getElementById('checkoutErr').style.display = 'none';
+        form.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function startCheckout() {
+        const email = document.getElementById('checkoutEmail').value.trim();
+        const errEl = document.getElementById('checkoutErr');
+        if (!email || !email.includes('@')) {
+            errEl.textContent = 'Please enter a valid email address.';
+            errEl.style.display = 'block';
+            return;
+        }
+        errEl.style.display = 'none';
+        const btn = document.getElementById('checkoutBtn');
+        btn.textContent = 'Loading...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/create-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, tier: currentCheckoutTier })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            if (data.url) window.location.href = data.url;
+        } catch (err) {
+            errEl.textContent = err.message || 'Checkout failed. Please try again.';
+            errEl.style.display = 'block';
+            btn.textContent = 'Continue →';
+            btn.disabled = false;
+        }
+    }
+
+    // ── ACCOUNT MODAL ─────────────────────────────────────────────
+    function openAccount() {
+        const t = userTier();
+        const lim = TIER_LIMITS[t];
+        const usage = getUsage();
+        const maxGames = lim.games === Infinity ? '∞' : lim.games;
+        const maxQ = lim.questions === Infinity ? '∞' : lim.questions;
+
+        document.getElementById('acctTierDisplay').textContent = TIER_LABELS[t] || 'Free';
+        document.getElementById('acctEmailDisplay').textContent = localStorage.getItem(LS_EMAIL) || 'Not signed in';
+        document.getElementById('acctGames').textContent = usage.games;
+        document.getElementById('acctGamesMax').textContent = `/ ${maxGames} today`;
+        document.getElementById('acctQuestions').textContent = usage.questions;
+        document.getElementById('acctQuestionsMax').textContent = `/ ${maxQ} today`;
+
+        document.getElementById('acctUpgradeBtn').style.display = t === 'pro' ? 'none' : 'block';
+        document.getElementById('acctManageBtn').style.display = localStorage.getItem(LS_CUSTOMER) ? 'block' : 'none';
+
+        document.getElementById('accountModal').classList.add('open');
+    }
+    function closeAccount() { document.getElementById('accountModal').classList.remove('open'); }
+
+    async function openCustomerPortal() {
+        const customerId = localStorage.getItem(LS_CUSTOMER);
+        if (!customerId) return;
+        const btn = document.getElementById('acctManageBtn');
+        btn.textContent = 'Loading...';
+        try {
+            const res = await fetch('/api/create-portal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId })
+            });
+            const data = await res.json();
+            if (data.url) window.location.href = data.url;
+        } catch { btn.textContent = 'Manage Subscription'; }
+    }
+
+    // ── PROTOTYPE SETTINGS ────────────────────────────────────────
+    function toggleProtoPanel() {
+        const body = document.getElementById('protoBody');
+        const chevron = document.getElementById('protoChevron');
+        const isOpen = body.classList.toggle('open');
+        chevron.classList.toggle('open', isOpen);
+        if (isOpen) updateProtoCreditDisplay();
+    }
+
+    function updateProtoCreditDisplay() {
+        const el = document.getElementById('protoCreditVal');
+        if (!el) return;
+        const c = sessionStorage.getItem('oddsCredits');
+        el.textContent = c ? `${c} / 500` : 'Unknown (load a sport first)';
+    }
+
+    function setProtoTier(tier) {
+        localStorage.setItem(LS_TIER, tier);
+        // Update buttons
+        ['free','go','plus','pro'].forEach(t => {
+            const btn = document.getElementById('pt' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (!btn) return;
+            btn.classList.toggle('active', t === tier);
+            btn.textContent = t === tier ? `${TIER_LABELS[t]} ✓` : TIER_LABELS[t];
+        });
+        updateSidebarTierDisplay();
+        // Refresh any open odds panel stars
+        if (selectedGame) renderOddsPanel(selectedGame);
+    }
+
+    function syncProtoButtons() {
+        const t = userTier();
+        ['free','go','plus','pro'].forEach(tier => {
+            const btn = document.getElementById('pt' + tier.charAt(0).toUpperCase() + tier.slice(1));
+            if (!btn) return;
+            btn.classList.toggle('active', tier === t);
+            btn.textContent = tier === t ? `${TIER_LABELS[tier]} ✓` : TIER_LABELS[tier];
+        });
+    }
+
+    // ── STRIPE SESSION VERIFICATION ───────────────────────────────
+    async function verifySession(sessionId) {
+        try {
+            const res = await fetch('/api/verify-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId })
+            });
+            const data = await res.json();
+            if (data.tier && data.tier !== 'free') {
+                localStorage.setItem(LS_TIER, data.tier);
+                localStorage.setItem(LS_CUSTOMER, data.customerId || '');
+                localStorage.setItem(LS_EMAIL, data.email || '');
+                localStorage.setItem(LS_VERIFIED, Date.now());
+            }
+        } catch {}
+        // Clean URL regardless
+        window.history.replaceState({}, '', '/');
+    }
+
+    async function refreshSubscription() {
+        const customerId = localStorage.getItem(LS_CUSTOMER);
+        if (!customerId) return;
+        const lastVerified = parseInt(localStorage.getItem(LS_VERIFIED) || '0');
+        if (Date.now() - lastVerified < 60 * 60 * 1000) return; // re-check every hour
+        try {
+            const res = await fetch('/api/check-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId })
+            });
+            const data = await res.json();
+            localStorage.setItem(LS_TIER, data.tier || 'free');
+            localStorage.setItem(LS_VERIFIED, Date.now());
+        } catch {}
+    }
+
+    // ── TICKER UPDATE ─────────────────────────────────────────────
+    function updateTicker(games) {
+        if (!games?.length) return;
+        const items = games.slice(0, 8).map(g => {
+            const book = g.bookmakers?.[0];
+            const spreads = book?.markets?.find(m => m.key === 'spreads');
+            const fav = spreads?.outcomes?.find(o => o.point < 0);
+            const line = fav ? ` (${shortName(fav.name)} ${fav.point})` : '';
+            return `<div class="ticker-item">${g.away_team} @ ${g.home_team}${line} <span class="t-green">${formatTime(g.commence_time)}</span></div>`;
+        });
+        const doubled = [...items, ...items].join('');
+        document.getElementById('mainTicker').innerHTML = doubled;
+    }
+
+    // ── UTILITIES ─────────────────────────────────────────────────
+    function fmt(price) {
+        if (price === undefined || price === null) return '—';
+        return price > 0 ? `+${price}` : `${price}`;
+    }
+
+    function shortTeam(name) {
+        if (!name) return '—';
+        const parts = name.trim().split(' ');
+        return parts.length > 2 ? parts.slice(-1)[0] : name;
+    }
+
+    function shortName(name) {
+        if (!name) return '';
+        return name.trim().split(' ').slice(-1)[0];
+    }
+
+    function formatTime(iso) {
+        if (!iso) return 'TBD';
+        const d = new Date(iso);
+        const now = new Date();
+        const diff = d - now;
+        if (diff < 0 && diff > -7200000) return 'LIVE';
+        if (diff < 0) return 'Recent';
+        if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return d.toLocaleString('en-US', {
+            month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit',
+            hour12: true, timeZone: tz,
+            timeZoneName: 'short'
+        });
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── INIT ──────────────────────────────────────────────────────
+    (async () => {
+        // Default prototype users to Pro on first visit (no stored tier)
+        if (!localStorage.getItem(LS_TIER)) {
+            localStorage.setItem(LS_TIER, 'pro');
+        }
+
+        // Check for Stripe return
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session_id');
+        if (sessionId) await verifySession(sessionId);
+
+        // Re-verify real subscription hourly (won't override proto tier unless there's a real Stripe customer)
+        await refreshSubscription();
+
+        // Update all displays
+        updateSidebarTierDisplay();
+        syncProtoButtons();
+        updateCreditsDisplay();
+        renderBetTracker();
+        renderHistory();
+
+        loadGames(currentSport);
+    })();
+</script>
+
+</body>
+</html>
