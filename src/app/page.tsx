@@ -8,17 +8,6 @@ import GamesGrid from '@/components/GamesGrid';
 import AnalysisView from '@/components/AnalysisView';
 import { useUser } from '@clerk/nextjs';
 
-const LS_FAVS = 'fo_favs';
-
-function getSavedBets(): SavedBet[] {
-    try { return JSON.parse(localStorage.getItem(LS_FAVS) || '[]'); }
-    catch { return []; }
-}
-
-function saveBets(bets: SavedBet[]) {
-    localStorage.setItem(LS_FAVS, JSON.stringify(bets));
-}
-
 export default function Home() {
     const { user, isSignedIn } = useUser();
 
@@ -40,9 +29,27 @@ export default function Home() {
         fetch('/api/user/sync', { method: 'POST' }).catch(console.error);
     }, [isSignedIn, user]);
 
+    // Load saved bets from API on sign-in
     useEffect(() => {
-        setSavedBets(getSavedBets());
-    }, []);
+        if (!isSignedIn || !user) return;
+        fetch('/api/bets')
+            .then((r) => r.json())
+            .then((data) => {
+                const bets: SavedBet[] = (data || []).map((b: any) => ({
+                    id: b.id,
+                    type: 'line',
+                    bookName: b.book_name,
+                    awayTeam: b.away_team,
+                    homeTeam: b.home_team,
+                    sport: b.sport,
+                    commenceTime: b.commence_time,
+                    pick: b.pick,
+                    savedAt: new Date(b.created_at).getTime(),
+                }));
+                setSavedBets(bets);
+            })
+            .catch(console.error);
+    }, [isSignedIn, user]);
 
     const loadGames = useCallback(async (sport: Sport) => {
         setGamesLoading(true);
@@ -157,38 +164,46 @@ export default function Home() {
         if (game) selectGame(game.id);
     }, [games, selectGame]);
 
-    const handleSaveBet = useCallback((favId: string, bookTitle: string) => {
+    const handleSaveBet = useCallback(async (favId: string, bookTitle: string) => {
         if (!selectedGame) return;
-        setSavedBets((prev) => {
-            const exists = prev.findIndex((b) => b.id === favId);
-            let updated: SavedBet[];
-            if (exists >= 0) {
-                updated = prev.filter((b) => b.id !== favId);
-            } else {
-                const newBet: SavedBet = {
+
+        const exists = savedBets.findIndex((b) => b.id === favId);
+
+        if (exists >= 0) {
+            setSavedBets((prev) => prev.filter((b) => b.id !== favId));
+            await fetch(`/api/bets?id=${favId}`, { method: 'DELETE' }).catch(console.error);
+        } else {
+            const newBet: SavedBet = {
+                id: favId,
+                type: 'line',
+                bookName: bookTitle,
+                awayTeam: selectedGame.away_team,
+                homeTeam: selectedGame.home_team,
+                sport: selectedGame.sport_title,
+                commenceTime: selectedGame.commence_time,
+                pick: bookTitle,
+                savedAt: Date.now(),
+            };
+            setSavedBets((prev) => [newBet, ...prev]);
+            await fetch('/api/bets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     id: favId,
-                    type: 'line',
                     bookName: bookTitle,
                     awayTeam: selectedGame.away_team,
                     homeTeam: selectedGame.home_team,
                     sport: selectedGame.sport_title,
                     commenceTime: selectedGame.commence_time,
                     pick: bookTitle,
-                    savedAt: Date.now(),
-                };
-                updated = [newBet, ...prev];
-            }
-            saveBets(updated);
-            return updated;
-        });
-    }, [selectedGame]);
+                }),
+            }).catch(console.error);
+        }
+    }, [selectedGame, savedBets]);
 
-    const handleRemoveBet = useCallback((id: string) => {
-        setSavedBets((prev) => {
-            const updated = prev.filter((b) => b.id !== id);
-            saveBets(updated);
-            return updated;
-        });
+    const handleRemoveBet = useCallback(async (id: string) => {
+        setSavedBets((prev) => prev.filter((b) => b.id !== id));
+        await fetch(`/api/bets?id=${id}`, { method: 'DELETE' }).catch(console.error);
     }, []);
 
     return (
