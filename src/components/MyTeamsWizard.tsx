@@ -81,7 +81,7 @@ export default function MyTeamsWizard({ savedTeamIds, onConfirm, onClose }: MyTe
                                             <div className="wizard-team-name">{team.name}</div>
                                             <span
                                                 className="wizard-league-tag"
-                                                style={{ background: leagueColor[team.league] ?? '#1a1a1a' }}
+                                                style={{ background: leagueColor[team.league] ?? 'var(--border-strong)' }}
                                             >
                                                 {team.league}
                                             </span>
@@ -143,7 +143,7 @@ function TeamLogo({ team }: { team: TeamDef }) {
     if (errored) {
         return (
             <div className="wizard-logo-fallback">
-                <span style={{ fontSize: '0.6rem', fontWeight: 900, color: '#555' }}>
+                <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--dim)' }}>
                     {team.league}
                 </span>
             </div>

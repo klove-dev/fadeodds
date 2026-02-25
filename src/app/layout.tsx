@@ -14,7 +14,16 @@ export default function RootLayout({
 }) {
     return (
         <ClerkProvider>
-            <html lang="en">
+            {/* suppressHydrationWarning: the anti-flash script sets data-theme before
+                React hydrates, causing a server/client mismatch that is intentional and safe. */}
+            <html lang="en" suppressHydrationWarning>
+                <head>
+                    <script
+                        dangerouslySetInnerHTML={{
+                            __html: `try{var t=localStorage.getItem('fadeodds-theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}`,
+                        }}
+                    />
+                </head>
                 <body>{children}</body>
             </html>
         </ClerkProvider>

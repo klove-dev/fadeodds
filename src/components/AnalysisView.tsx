@@ -20,9 +20,9 @@ function InjuryPanel({ injuries }: { injuries: Injury[] }) {
 
     const statusColor = (s: string) => {
         s = (s || '').toLowerCase();
-        if (s.includes('out')) return '#ff4444';
-        if (s.includes('doubtful')) return '#ff8800';
-        if (s.includes('questionable')) return '#FFD700';
+        if (s.includes('out')) return '#EF4444';
+        if (s.includes('doubtful')) return 'var(--orange)';
+        if (s.includes('questionable')) return '#F59E0B';
         return 'var(--dim)';
     };
 
@@ -30,7 +30,7 @@ function InjuryPanel({ injuries }: { injuries: Injury[] }) {
         <div style={{ marginBottom: '16px' }}>
             <div style={{
                 fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase',
-                letterSpacing: '2px', color: '#ff8800', marginBottom: '10px',
+                letterSpacing: '2px', color: 'var(--orange)', marginBottom: '10px',
                 display: 'flex', alignItems: 'center', gap: '6px'
             }}>
                 Injury Report
@@ -38,7 +38,7 @@ function InjuryPanel({ injuries }: { injuries: Injury[] }) {
             {injuries.map((inj, i) => (
                 <div key={i} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '7px 10px', background: '#0d0d0d', borderRadius: '8px',
+                    padding: '7px 10px', background: 'var(--card-sub)', borderRadius: '8px',
                     marginBottom: '5px', borderLeft: `3px solid ${statusColor(inj.status)}`
                 }}>
                     <div>
@@ -176,7 +176,7 @@ export default function AnalysisView({
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <div className="rec-label">Edge</div>
-                                        <div style={{ fontSize: '0.72rem', color: '#aaa', fontWeight: 700, marginTop: '4px' }}>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--dim)', fontWeight: 700, marginTop: '4px' }}>
                                             {analysis.edge}
                                         </div>
                                     </div>
