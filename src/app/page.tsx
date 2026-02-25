@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
+import { ALL_TEAMS, teamMatchesGame, type TeamDef } from '@/lib/teams';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import GamesGrid from '@/components/GamesGrid';
 import AnalysisView from '@/components/AnalysisView';
+import MyTeamsWizard from '@/components/MyTeamsWizard';
 import { useUser } from '@clerk/nextjs';
+
+const LS_KEY = 'fadeodds_my_teams';
 
 export default function Home() {
     const { user, isSignedIn } = useUser();
@@ -23,6 +27,11 @@ export default function Home() {
     const [savedBets, setSavedBets]       = useState<SavedBet[]>([]);
     const [sessionHistory, setSessionHistory] = useState<{ title: string; sport: string }[]>([]);
     const [oddsCredits, setOddsCredits]   = useState<string | null>(null);
+
+    // My Teams state
+    const [myTeams, setMyTeams]             = useState<TeamDef[]>([]);
+    const [myTeamsActive, setMyTeamsActive] = useState(false);
+    const [showWizard, setShowWizard]       = useState(false);
 
     useEffect(() => {
         if (!isSignedIn || !user) return;
@@ -49,6 +58,35 @@ export default function Home() {
                 setSavedBets(bets);
             })
             .catch(console.error);
+    }, [isSignedIn, user]);
+
+    // Load My Teams — DB when signed in, localStorage fallback when signed out
+    useEffect(() => {
+        if (isSignedIn && user) {
+            fetch('/api/teams')
+                .then((r) => r.json())
+                .then((ids: string[]) => {
+                    const teams = ids
+                        .map((id) => ALL_TEAMS.find((t) => t.id === id))
+                        .filter((t): t is TeamDef => !!t);
+                    setMyTeams(teams);
+                    localStorage.setItem(LS_KEY, JSON.stringify(ids));
+                })
+                .catch(console.error);
+        } else {
+            try {
+                const stored = localStorage.getItem(LS_KEY);
+                if (stored) {
+                    const ids: string[] = JSON.parse(stored);
+                    const teams = ids
+                        .map((id) => ALL_TEAMS.find((t) => t.id === id))
+                        .filter((t): t is TeamDef => !!t);
+                    setMyTeams(teams);
+                }
+            } catch {
+                // ignore malformed localStorage
+            }
+        }
     }, [isSignedIn, user]);
 
     const loadGames = useCallback(async (sport: Sport) => {
@@ -79,9 +117,82 @@ export default function Home() {
         }
     }, []);
 
+    const loadMyTeamsGames = useCallback(async (teams: TeamDef[]) => {
+        if (teams.length === 0) return;
+        setGamesLoading(true);
+        try {
+            const uniqueSports = [...new Set(teams.map((t) => t.sport))];
+            const results = await Promise.all(
+                uniqueSports.map((s) =>
+                    fetch(`/api/odds?sport=${s}`).then((r) => r.ok ? r.json() : [])
+                )
+            );
+            const merged: Game[] = results.flat();
+            // Deduplicate by game id (handles teams from same sport)
+            const seen = new Set<string>();
+            const deduped = merged.filter((g) => {
+                if (seen.has(g.id)) return false;
+                seen.add(g.id);
+                return true;
+            });
+            const filtered = deduped.filter((g) =>
+                teams.some(
+                    (t) => teamMatchesGame(t, g.away_team) || teamMatchesGame(t, g.home_team)
+                )
+            );
+            setGames(filtered);
+            setScores([]); // scores are per-sport; skip for cross-sport view
+        } catch (err) {
+            console.error('Failed to load My Teams games:', err);
+            setGames([]);
+        } finally {
+            setGamesLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         loadGames(currentSport);
     }, [currentSport, loadGames]);
+
+    const handleSportChange = useCallback((sport: Sport) => {
+        // Switching sport always turns off My Teams
+        setMyTeamsActive(false);
+        setCurrentSport(sport);
+    }, []);
+
+    const handleMyTeamsToggle = useCallback(() => {
+        if (myTeams.length === 0) {
+            setShowWizard(true);
+            return;
+        }
+        setMyTeamsActive((prev) => {
+            const next = !prev;
+            if (next) {
+                loadMyTeamsGames(myTeams);
+            } else {
+                loadGames(currentSport);
+            }
+            return next;
+        });
+    }, [myTeams, currentSport, loadMyTeamsGames, loadGames]);
+
+    const handleWizardConfirm = useCallback((teams: TeamDef[]) => {
+        const ids = teams.map((t) => t.id);
+        setMyTeams(teams);
+        localStorage.setItem(LS_KEY, JSON.stringify(ids));
+        if (isSignedIn) {
+            fetch('/api/teams', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ teamIds: ids }),
+            }).catch(console.error);
+        }
+        setShowWizard(false);
+        if (teams.length > 0) {
+            setMyTeamsActive(true);
+            loadMyTeamsGames(teams);
+        }
+    }, [isSignedIn, loadMyTeamsGames]);
 
     const getGameInjuries = useCallback(async (game: Game): Promise<Injury[]> => {
         try {
@@ -225,6 +336,14 @@ export default function Home() {
                 onOpenPricing={() => {}}
             />
 
+            {showWizard && (
+                <MyTeamsWizard
+                    savedTeamIds={myTeams.map((t) => t.id)}
+                    onConfirm={handleWizardConfirm}
+                    onClose={() => setShowWizard(false)}
+                />
+            )}
+
             <main className="main-content">
                 {selectedGame ? (
                     <AnalysisView
@@ -253,8 +372,12 @@ export default function Home() {
                             scores={scores}
                             loading={gamesLoading}
                             currentSport={currentSport}
-                            onSportChange={setCurrentSport}
+                            onSportChange={handleSportChange}
                             onSelectGame={selectGame}
+                            myTeamsActive={myTeamsActive}
+                            myTeams={myTeams}
+                            onMyTeamsToggle={handleMyTeamsToggle}
+                            onEditMyTeams={() => setShowWizard(true)}
                         />
                     </>
                 )}
