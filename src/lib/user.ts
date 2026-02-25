@@ -116,3 +116,27 @@ export async function deleteSavedBet(clerkUserId: string, betId: string): Promis
         .eq('id', betId)
         .eq('user_id', clerkUserId);
 }
+
+export async function getMyTeams(clerkUserId: string): Promise<string[]> {
+    const { data, error } = await supabaseAdmin
+        .from('user_teams')
+        .select('team_id')
+        .eq('user_id', clerkUserId)
+        .order('created_at', { ascending: true });
+
+    if (error || !data) return [];
+    return data.map((row: { team_id: string }) => row.team_id);
+}
+
+export async function saveMyTeams(clerkUserId: string, teamIds: string[]): Promise<void> {
+    await supabaseAdmin
+        .from('user_teams')
+        .delete()
+        .eq('user_id', clerkUserId);
+
+    if (teamIds.length === 0) return;
+
+    await supabaseAdmin
+        .from('user_teams')
+        .insert(teamIds.map((team_id) => ({ user_id: clerkUserId, team_id })));
+}

@@ -339,3 +339,121 @@ body {
 @media (max-width: 420px) {
     .pricing-cards { grid-template-columns: 1fr; }
 }
+
+/* ─── My Teams toggle button ──────────────────────────────────────────────── */
+.sport-tab.my-teams { color: var(--gold); border-color: rgba(255,215,0,0.3); }
+.sport-tab.my-teams:hover { border-color: var(--gold); background: rgba(255,215,0,0.08); color: var(--gold); }
+.sport-tab.my-teams.active { border-color: var(--gold); background: rgba(255,215,0,0.1); color: var(--gold); }
+
+.gear-btn {
+    background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.25);
+    color: var(--gold); width: 34px; height: 34px; border-radius: 100px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; transition: all 0.15s; flex-shrink: 0;
+}
+.gear-btn:hover { background: rgba(255,215,0,0.18); border-color: var(--gold); }
+
+/* ─── My Teams Wizard ─────────────────────────────────────────────────────── */
+.wizard-modal { max-width: 580px; display: flex; flex-direction: column; max-height: 90vh; }
+
+.wizard-header {
+    padding: 28px 28px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.wizard-title {
+    font-size: 1.3rem; font-weight: 900; font-style: italic;
+    letter-spacing: -0.5px; color: var(--gold); margin-bottom: 4px;
+}
+.wizard-sub { font-size: 0.65rem; color: var(--dim); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+.wizard-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+
+.wizard-search {
+    width: 100%; background: #111; border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 14px; color: #fff; font-size: 0.82rem;
+    outline: none; margin-bottom: 14px; font-family: inherit;
+    transition: border-color 0.15s;
+}
+.wizard-search:focus { border-color: var(--gold); }
+.wizard-search::placeholder { color: #444; }
+
+.wizard-results { display: flex; flex-direction: column; gap: 2px; }
+
+.wizard-team-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 6px; border-radius: 10px;
+    transition: background 0.1s;
+}
+.wizard-team-row:hover { background: #111; }
+
+.wizard-logo {
+    width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; border-radius: 4px;
+}
+.wizard-logo-fallback {
+    width: 36px; height: 36px; background: #1a1a1a; border-radius: 6px;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+
+.wizard-team-info { flex: 1; min-width: 0; }
+.wizard-team-name { font-size: 0.82rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wizard-league-tag {
+    display: inline-block; font-size: 0.48rem; font-weight: 900;
+    padding: 2px 6px; border-radius: 100px; color: #fff;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px;
+}
+
+.wizard-add-btn {
+    flex-shrink: 0; background: #1a1a1a; border: 1px solid #2a2a2a;
+    color: var(--dim); font-size: 0.62rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 6px 12px; border-radius: 100px; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+}
+.wizard-add-btn:hover { border-color: var(--gold); color: var(--gold); }
+.wizard-add-btn.selected { border-color: var(--gold); color: var(--gold); background: rgba(255,215,0,0.08); }
+
+.wizard-selected {
+    border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;
+}
+.wizard-selected-label {
+    font-size: 0.56rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--gold); margin-bottom: 10px;
+}
+.wizard-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wizard-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 100px; padding: 4px 10px;
+    font-size: 0.65rem; font-weight: 700; color: var(--gold);
+}
+.wizard-chip-remove {
+    background: none; border: none; color: rgba(255,215,0,0.5);
+    cursor: pointer; font-size: 0.6rem; padding: 0; line-height: 1;
+    transition: color 0.15s;
+}
+.wizard-chip-remove:hover { color: var(--gold); }
+
+.wizard-footer {
+    padding: 16px 24px 22px; border-top: 1px solid var(--border); flex-shrink: 0;
+}
+.wizard-confirm {
+    width: 100%; padding: 12px; background: var(--gold); color: #000;
+    font-weight: 900; font-size: 0.78rem; border: none; border-radius: 10px;
+    cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+    transition: opacity 0.15s; font-family: inherit;
+}
+.wizard-confirm:hover:not(:disabled) { opacity: 0.88; }
+.wizard-confirm:disabled { opacity: 0.35; cursor: default; background: #555; color: #222; }
+
+/* ─── My Teams empty state ────────────────────────────────────────────────── */
+.my-teams-empty {
+    text-align: center; padding: 60px 20px; color: var(--dim);
+}
+.my-teams-empty-icon { font-size: 2rem; margin-bottom: 14px; }
+.my-teams-empty-title { font-size: 0.88rem; font-weight: 900; color: #fff; margin-bottom: 8px; }
+.my-teams-empty-sub { font-size: 0.72rem; margin-bottom: 20px; }
+.my-teams-manage-btn {
+    background: none; border: 1px solid rgba(255,215,0,0.3); color: var(--gold);
+    font-size: 0.68rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 8px 18px; border-radius: 100px;
+    cursor: pointer; transition: all 0.15s;
+}
+.my-teams-manage-btn:hover { border-color: var(--gold); background: rgba(255,215,0,0.08); }
