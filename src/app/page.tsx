@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
-import { ALL_TEAMS, teamMatchesGame, type TeamDef } from '@/lib/teams';
+import { teamMatchesGame, type TeamDef } from '@/lib/teams';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import GamesGrid from '@/components/GamesGrid';
@@ -32,11 +32,20 @@ export default function Home() {
     const [myTeams, setMyTeams]             = useState<TeamDef[]>([]);
     const [myTeamsActive, setMyTeamsActive] = useState(false);
     const [showWizard, setShowWizard]       = useState(false);
+    const [allTeams, setAllTeams]           = useState<TeamDef[]>([]);
 
     useEffect(() => {
         if (!isSignedIn || !user) return;
         fetch('/api/user/sync', { method: 'POST' }).catch(console.error);
     }, [isSignedIn, user]);
+
+    // Load all teams from DB
+    useEffect(() => {
+        fetch('/api/teams')
+            .then((r) => r.json())
+            .then((teams: TeamDef[]) => setAllTeams(teams))
+            .catch(console.error);
+    }, []);
 
     // Load saved bets from API on sign-in
     useEffect(() => {
@@ -62,12 +71,13 @@ export default function Home() {
 
     // Load My Teams — DB when signed in, localStorage fallback when signed out
     useEffect(() => {
+        if (allTeams.length === 0) return;
         if (isSignedIn && user) {
-            fetch('/api/teams')
+            fetch('/api/my-teams')
                 .then((r) => r.json())
                 .then((ids: string[]) => {
                     const teams = ids
-                        .map((id) => ALL_TEAMS.find((t) => t.id === id))
+                        .map((id) => allTeams.find((t) => t.id === id))
                         .filter((t): t is TeamDef => !!t);
                     setMyTeams(teams);
                     localStorage.setItem(LS_KEY, JSON.stringify(ids));
@@ -79,7 +89,7 @@ export default function Home() {
                 if (stored) {
                     const ids: string[] = JSON.parse(stored);
                     const teams = ids
-                        .map((id) => ALL_TEAMS.find((t) => t.id === id))
+                        .map((id) => allTeams.find((t) => t.id === id))
                         .filter((t): t is TeamDef => !!t);
                     setMyTeams(teams);
                 }
@@ -87,7 +97,7 @@ export default function Home() {
                 // ignore malformed localStorage
             }
         }
-    }, [isSignedIn, user]);
+    }, [isSignedIn, user, allTeams]);
 
     const loadGames = useCallback(async (sport: Sport) => {
         setGamesLoading(true);
@@ -181,7 +191,7 @@ export default function Home() {
         setMyTeams(teams);
         localStorage.setItem(LS_KEY, JSON.stringify(ids));
         if (isSignedIn) {
-            fetch('/api/teams', {
+            fetch('/api/my-teams', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ teamIds: ids }),
@@ -338,6 +348,7 @@ export default function Home() {
 
             {showWizard && (
                 <MyTeamsWizard
+                    allTeams={allTeams}
                     savedTeamIds={myTeams.map((t) => t.id)}
                     onConfirm={handleWizardConfirm}
                     onClose={() => setShowWizard(false)}

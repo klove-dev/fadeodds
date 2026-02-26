@@ -520,3 +520,26 @@ export const ALL_TEAMS: TeamDef[] = [
     { id: 'ncaa-orst', name: 'Oregon State Beavers',      city: 'Oregon State',   mascot: 'Beavers',      league: 'NCAAB', sport: 'basketball_ncaab', espnAbbr: '204' },
     { id: 'ncaa-wast', name: 'Washington State Cougars',  city: 'Washington State',mascot: 'Cougars',     league: 'NCAAB', sport: 'basketball_ncaab', espnAbbr: '265' },
 ];
+
+
+export async function getTeams(): Promise<TeamDef[]> {
+    const { supabaseAdmin } = await import('./supabase');
+
+    const { data, error } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .order('league')
+        .order('name');
+
+    if (error || !data) return ALL_TEAMS; // fallback to hardcoded if DB fails
+
+    return data.map((row) => ({
+        id: row.id,
+        name: row.name,
+        city: row.city,
+        mascot: row.mascot,
+        league: row.league,
+        sport: row.sport as Sport,
+        espnAbbr: row.espn_abbr,
+    }));
+}

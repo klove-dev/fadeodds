@@ -1,31 +1,32 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ALL_TEAMS, teamLogoUrl, type TeamDef } from '@/lib/teams';
+import { teamLogoUrl, type TeamDef } from '@/lib/teams';
 
 interface MyTeamsWizardProps {
+    allTeams: TeamDef[];
     savedTeamIds: string[];
     onConfirm: (teams: TeamDef[]) => void;
     onClose: () => void;
 }
 
-export default function MyTeamsWizard({ savedTeamIds, onConfirm, onClose }: MyTeamsWizardProps) {
+export default function MyTeamsWizard({ allTeams, savedTeamIds, onConfirm, onClose }: MyTeamsWizardProps) {
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState<Set<string>>(new Set(savedTeamIds));
 
     const results = useMemo(() => {
         const q = query.toLowerCase().trim();
-        if (!q) return ALL_TEAMS.slice(0, 60);
-        return ALL_TEAMS.filter((t) =>
+        if (!q) return allTeams.slice(0, 60);
+        return allTeams.filter((t) =>
             t.name.toLowerCase().includes(q) ||
             t.city.toLowerCase().includes(q) ||
             t.mascot.toLowerCase().includes(q)
         );
-    }, [query]);
+    }, [query, allTeams]);
 
     const selectedTeams = useMemo(
-        () => ALL_TEAMS.filter((t) => selected.has(t.id)),
-        [selected]
+        () => allTeams.filter((t) => selected.has(t.id)),
+        [selected, allTeams]
     );
 
     const toggle = (id: string) => {
@@ -65,7 +66,6 @@ export default function MyTeamsWizard({ savedTeamIds, onConfirm, onClose }: MyTe
                         autoFocus
                     />
 
-                    {/* Results */}
                     <div className="wizard-results">
                         {results.length === 0 ? (
                             <div style={{ textAlign: 'center', padding: '30px', color: 'var(--dim)', fontSize: '0.78rem' }}>
@@ -90,40 +90,27 @@ export default function MyTeamsWizard({ savedTeamIds, onConfirm, onClose }: MyTe
                                             className={`wizard-add-btn ${isSelected ? 'selected' : ''}`}
                                             onClick={() => toggle(team.id)}
                                         >
-                                            {isSelected ? '✓ Following' : '+ Follow'}
+                                            {isSelected ? '✓ Added' : '+ Add'}
                                         </button>
                                     </div>
                                 );
                             })
                         )}
                     </div>
-
-                    {/* Selected summary */}
-                    {selectedTeams.length > 0 && (
-                        <div className="wizard-selected">
-                            <div className="wizard-selected-label">
-                                Following ({selectedTeams.length})
-                            </div>
-                            <div className="wizard-chips">
-                                {selectedTeams.map((team) => (
-                                    <span key={team.id} className="wizard-chip">
-                                        {team.city}
-                                        <button
-                                            className="wizard-chip-remove"
-                                            onClick={() => toggle(team.id)}
-                                        >
-                                            ✕
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 <div className="wizard-footer">
+                    {selectedTeams.length > 0 && (
+                        <div className="wizard-selected-chips">
+                            {selectedTeams.map((t) => (
+                                <span key={t.id} className="wizard-chip" onClick={() => toggle(t.id)}>
+                                    {t.mascot} ✕
+                                </span>
+                            ))}
+                        </div>
+                    )}
                     <button
-                        className="wizard-confirm"
+                        className="wizard-confirm-btn"
                         disabled={selectedTeams.length === 0}
                         onClick={() => onConfirm(selectedTeams)}
                     >

@@ -1,25 +1,26 @@
-import { auth } from '@clerk/nextjs/server';
-import { getMyTeams, saveMyTeams } from '@/lib/user';
+import { supabaseAdmin } from '@/lib/supabase';
+import type { TeamDef } from '@/lib/teams';
 
 export async function GET() {
-    const { userId } = await auth();
-    if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const { data, error } = await supabaseAdmin
+        .from('teams')
+        .select('*')
+        .order('league')
+        .order('name');
 
-    const teamIds = await getMyTeams(userId);
-    return Response.json(teamIds);
-}
-
-export async function POST(request: Request) {
-    const { userId } = await auth();
-    if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
-    let body: { teamIds: string[] };
-    try {
-        body = await request.json();
-    } catch {
-        return Response.json({ error: 'Invalid request body' }, { status: 400 });
+    if (error) {
+        return Response.json({ error: error.message }, { status: 500 });
     }
 
-    await saveMyTeams(userId, body.teamIds ?? []);
-    return Response.json({ success: true });
+    const teams: TeamDef[] = data.map((row) => ({
+        id: row.id,
+        name: row.name,
+        city: row.city,
+        mascot: row.mascot,
+        league: row.league,
+        sport: row.sport,
+        espnAbbr: row.espn_abbr,
+    }));
+
+    return Response.json(teams);
 }
