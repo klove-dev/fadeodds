@@ -486,13 +486,13 @@ body {
     padding: 16px 24px 22px; border-top: 1px solid var(--border); flex-shrink: 0;
 }
 .wizard-confirm {
-    width: 100%; padding: 12px; background: var(--cobalt); color: #fff;
+    width: 100%; padding: 12px; background: var(--cobalt) !important; color: #fff !important;
     font-weight: 900; font-size: 0.78rem; border: none; border-radius: 10px;
     cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
     transition: opacity 0.15s; font-family: inherit;
 }
 .wizard-confirm:hover:not(:disabled) { opacity: 0.88; }
-.wizard-confirm:disabled { opacity: 0.35; cursor: default; background: var(--border-strong); color: var(--muted); }
+.wizard-confirm:disabled { opacity: 0.5; cursor: not-allowed; background: var(--cobalt) !important; color: #fff !important; }
 
 /* ─── My Teams empty state ────────────────────────────────────────────────── */
 .my-teams-empty {

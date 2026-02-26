@@ -110,7 +110,7 @@ export default function MyTeamsWizard({ allTeams, savedTeamIds, onConfirm, onClo
                         </div>
                     )}
                     <button
-                        className="wizard-confirm-btn"
+                        className="wizard-confirm"
                         disabled={selectedTeams.length === 0}
                         onClick={() => onConfirm(selectedTeams)}
                     >
