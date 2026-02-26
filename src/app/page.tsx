@@ -221,9 +221,14 @@ export default function Home() {
         setShowWizard(false);
         if (teams.length > 0) {
             setMyTeamsActive(true);
+            setMyTeamsPureMode(true);
             loadMyTeamsGames(teams);
+        } else {
+            setMyTeamsActive(false);
+            setMyTeamsPureMode(false);
+            loadGames(currentSport);
         }
-    }, [isSignedIn, loadMyTeamsGames]);
+    }, [isSignedIn, loadMyTeamsGames, loadGames, currentSport]);
 
     const getGameInjuries = useCallback(async (game: Game): Promise<Injury[]> => {
         try {
