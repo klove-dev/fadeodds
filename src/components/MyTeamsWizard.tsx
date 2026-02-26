@@ -5,24 +5,29 @@ import { teamLogoUrl, type TeamDef } from '@/lib/teams';
 
 interface MyTeamsWizardProps {
     allTeams: TeamDef[];
+    leagues: string[];
     savedTeamIds: string[];
     onConfirm: (teams: TeamDef[]) => void;
     onClose: () => void;
 }
 
-export default function MyTeamsWizard({ allTeams, savedTeamIds, onConfirm, onClose }: MyTeamsWizardProps) {
+export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfirm, onClose }: MyTeamsWizardProps) {
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState<Set<string>>(new Set(savedTeamIds));
+    const [selectedLeague, setSelectedLeague] = useState<string>('');
 
     const results = useMemo(() => {
         const q = query.toLowerCase().trim();
-        if (!q) return allTeams.slice(0, 60);
-        return allTeams.filter((t) =>
+        const leagueFiltered = selectedLeague
+            ? allTeams.filter((t) => t.league === selectedLeague)
+            : allTeams;
+        if (!q) return leagueFiltered.slice(0, 60);
+        return leagueFiltered.filter((t) =>
             t.name.toLowerCase().includes(q) ||
             t.city.toLowerCase().includes(q) ||
             t.mascot.toLowerCase().includes(q)
         );
-    }, [query, allTeams]);
+    }, [query, allTeams, selectedLeague]);
 
     const selectedTeams = useMemo(
         () => allTeams.filter((t) => selected.has(t.id)),
@@ -65,6 +70,18 @@ export default function MyTeamsWizard({ allTeams, savedTeamIds, onConfirm, onClo
                         onChange={(e) => setQuery(e.target.value)}
                         autoFocus
                     />
+
+                    <div className="wizard-league-tabs">
+                        {leagues.map((league) => (
+                            <button
+                                key={league}
+                                className={`wizard-league-tab ${selectedLeague === league ? 'active' : ''}`}
+                                onClick={() => setSelectedLeague(league)}
+                            >
+                                {league}
+                            </button>
+                        ))}
+                    </div>
 
                     <div className="wizard-results">
                         {results.length === 0 ? (

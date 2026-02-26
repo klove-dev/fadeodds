@@ -494,6 +494,19 @@ body {
 .wizard-confirm:hover:not(:disabled) { opacity: 0.88; }
 .wizard-confirm:disabled { opacity: 0.5; cursor: not-allowed; background: var(--cobalt) !important; color: #fff !important; }
 
+.wizard-league-tabs {
+    display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.wizard-league-tab {
+    background: var(--card-sub); border: 1px solid var(--border);
+    color: var(--dim); font-size: 0.62rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 5px 12px; border-radius: 100px; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+}
+.wizard-league-tab:hover { border-color: var(--cobalt); color: var(--cobalt); }
+.wizard-league-tab.active { border-color: var(--cobalt); color: var(--cobalt); background: rgba(37,99,235,0.08); }
+
 /* ─── My Teams empty state ────────────────────────────────────────────────── */
 .my-teams-empty {
     text-align: center; padding: 60px 20px; color: var(--dim);

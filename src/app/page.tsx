@@ -34,6 +34,7 @@ export default function Home() {
     const [showWizard, setShowWizard]       = useState(false);
     const [allTeams, setAllTeams]           = useState<TeamDef[]>([]);
     const [myTeamsPureMode, setMyTeamsPureMode] = useState(false);
+    const [leagues, setLeagues] = useState<string[]>([]);
 
     useEffect(() => {
         if (!isSignedIn || !user) return;
@@ -45,6 +46,14 @@ export default function Home() {
         fetch('/api/teams')
             .then((r) => r.json())
             .then((teams: TeamDef[]) => setAllTeams(teams))
+            .catch(console.error);
+    }, []);
+
+    // Load leagues from DB
+    useEffect(() => {
+        fetch('/api/teams?leagues=true')
+            .then((r) => r.json())
+            .then((data: string[]) => setLeagues(data))
             .catch(console.error);
     }, []);
 
@@ -375,6 +384,7 @@ export default function Home() {
             {showWizard && (
                 <MyTeamsWizard
                     allTeams={allTeams}
+                    leagues={leagues}
                     savedTeamIds={myTeams.map((t) => t.id)}
                     onConfirm={handleWizardConfirm}
                     onClose={() => setShowWizard(false)}
