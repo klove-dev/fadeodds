@@ -98,27 +98,19 @@ export default function MyTeamsWizard({ allTeams, savedTeamIds, onConfirm, onClo
                         )}
                     </div>
                 </div>
-
-                <div className="wizard-footer">
-                    {selectedTeams.length > 0 && (
-                        <div className="wizard-selected-chips">
-                            {selectedTeams.map((t) => (
-                                <span key={t.id} className="wizard-chip" onClick={() => toggle(t.id)}>
-                                    {t.mascot} ✕
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                    <button
-                        className="wizard-confirm"
-                        disabled={selectedTeams.length === 0}
-                        onClick={() => onConfirm(selectedTeams)}
-                    >
-                        {selectedTeams.length === 0
-                            ? 'Select at least one team'
-                            : `Confirm ${selectedTeams.length} Team${selectedTeams.length !== 1 ? 's' : ''}`}
-                    </button>
-                </div>
+                
+                {(selectedTeams.length > 0 || savedTeamIds.length > 0) && (
+                    <div className="wizard-footer">
+                        <button
+                            className="wizard-confirm"
+                            onClick={() => onConfirm(selectedTeams)}
+                        >
+                            {selectedTeams.length === 0
+                                ? 'Save Teams (0)'
+                                : `Save Team${selectedTeams.length !== 1 ? 's' : ''} (${selectedTeams.length})`}
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
