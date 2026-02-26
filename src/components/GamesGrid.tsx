@@ -3,6 +3,7 @@
 import { Game, Score, Sport } from '@/types';
 import { makeScoreKey } from '@/lib/utils';
 import type { TeamDef } from '@/lib/teams';
+import { teamMatchesGame } from '@/lib/teams';
 import GameCard from './GameCard';
 
 const SPORTS: { key: Sport; label: string }[] = [
@@ -21,6 +22,7 @@ interface GamesGridProps {
     onSportChange: (sport: Sport) => void;
     onSelectGame: (gameId: string) => void;
     myTeamsActive: boolean;
+    myTeamsPureMode: boolean;
     myTeams: TeamDef[];
     onMyTeamsToggle: () => void;
     onEditMyTeams: () => void;
@@ -34,6 +36,7 @@ export default function GamesGrid({
     onSportChange,
     onSelectGame,
     myTeamsActive,
+    myTeamsPureMode,
     myTeams,
     onMyTeamsToggle,
     onEditMyTeams,
@@ -57,26 +60,18 @@ export default function GamesGrid({
         <>
             <div className="sport-tabs">
                 {/* My Teams toggle */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <button
-                        className={`sport-tab my-teams ${myTeamsActive ? 'active' : ''}`}
+                        className={`sport-tab my-teams ${myTeamsPureMode ? 'active' : ''}`}
                         onClick={onMyTeamsToggle}
                     >
-                        ★ My Teams{myTeams.length > 0 ? ` (${myTeams.length})` : ''}
+                        ★ My Teams
                     </button>
-                    {myTeamsActive && (
-                        <button className="gear-btn" onClick={onEditMyTeams} title="Edit My Teams">
-                            ⚙
-                        </button>
-                    )}
-                </div>
 
-                {/* Sport tabs — dimmed when My Teams is active */}
+                {/* Sport tabs */}
                 {SPORTS.map((s) => (
                     <button
                         key={s.key}
-                        className={`sport-tab ${!myTeamsActive && currentSport === s.key ? 'active' : ''}`}
-                        style={myTeamsActive ? { opacity: 0.45 } : undefined}
+                        className={`sport-tab ${currentSport === s.key && !myTeamsPureMode ? 'active' : ''}`}
                         onClick={() => onSportChange(s.key)}
                     >
                         {s.label}
@@ -86,6 +81,13 @@ export default function GamesGrid({
 
             <div className="games-section">
                 <div className="section-label">{sectionLabel}</div>
+                {myTeamsPureMode && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                        <button className="my-teams-manage-btn" onClick={onEditMyTeams}>
+                            Manage My Teams
+                        </button>
+                    </div>
+                )}
 
                 {loading ? (
                     <div className="games-grid">
@@ -93,31 +95,32 @@ export default function GamesGrid({
                             <div key={i} className="skeleton" />
                         ))}
                     </div>
-                ) : myTeamsActive && games.length === 0 ? (
+                ) : myTeamsPureMode && games.length === 0 ? (
                     <div className="my-teams-empty">
-                        <div className="my-teams-empty-icon">📅</div>
                         <div className="my-teams-empty-title">None of your teams are playing soon</div>
                         <div className="my-teams-empty-sub">Check back closer to game day, or update your teams.</div>
-                        <button className="my-teams-manage-btn" onClick={onEditMyTeams}>
-                            Manage My Teams
-                        </button>
                     </div>
                 ) : games.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--dim)' }}>
-                        <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📅</div>
                         <div style={{ fontWeight: 700 }}>No upcoming games right now</div>
                         <div style={{ fontSize: '0.72rem', marginTop: '8px' }}>Try another sport or check back later</div>
                     </div>
                 ) : (
                     <div className="games-grid">
-                        {games.map((game) => (
-                            <GameCard
-                                key={game.id}
-                                game={game}
-                                score={getScore(game)}
-                                onSelect={onSelectGame}
-                            />
-                        ))}
+                        {games.map((game) => {
+                            const isMyTeam = myTeamsActive && myTeams.some(
+                                (t) => teamMatchesGame(t, game.away_team) || teamMatchesGame(t, game.home_team)
+                            );
+                            return (
+                                <GameCard
+                                    key={game.id}
+                                    game={game}
+                                    score={getScore(game)}
+                                    onSelect={onSelectGame}
+                                    isMyTeam={isMyTeam}
+                                />
+                            );
+                        })}
                     </div>
                 )}
             </div>

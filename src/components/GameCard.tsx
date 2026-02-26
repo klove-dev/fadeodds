@@ -7,9 +7,10 @@ interface GameCardProps {
     game: Game;
     score?: Score;
     onSelect: (gameId: string) => void;
+    isMyTeam?: boolean;
 }
 
-export default function GameCard({ game, score, onSelect }: GameCardProps) {
+export default function GameCard({ game, score, onSelect, isMyTeam }: GameCardProps) {
     const books = game.bookmakers || [];
 
     const findMarket = (key: string) => {
@@ -56,6 +57,14 @@ export default function GameCard({ game, score, onSelect }: GameCardProps) {
 
     return (
         <div className="game-card" onClick={() => onSelect(game.id)}>
+            {isMyTeam && (
+                <div style={{
+                    position: 'absolute', top: '10px', right: '12px',
+                    color: 'var(--cobalt)', fontSize: '0.75rem', fontWeight: 900,
+                }}>
+                    ★
+                </div>
+            )}
 
             {isLive && score?.homeScore !== null ? (
                 <>

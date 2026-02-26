@@ -33,6 +33,7 @@ export default function Home() {
     const [myTeamsActive, setMyTeamsActive] = useState(false);
     const [showWizard, setShowWizard]       = useState(false);
     const [allTeams, setAllTeams]           = useState<TeamDef[]>([]);
+    const [myTeamsPureMode, setMyTeamsPureMode] = useState(false);
 
     useEffect(() => {
         if (!isSignedIn || !user) return;
@@ -99,7 +100,7 @@ export default function Home() {
         }
     }, [isSignedIn, user, allTeams]);
 
-    const loadGames = useCallback(async (sport: Sport) => {
+    const loadGames = useCallback(async (sport: Sport, sortMyTeams = false) => {
         setGamesLoading(true);
         try {
             const [oddsRes, scoresRes] = await Promise.all([
@@ -113,7 +114,17 @@ export default function Home() {
             const remaining = oddsRes.headers.get('x-requests-remaining');
             if (remaining && remaining !== 'unknown') setOddsCredits(remaining);
 
-            setGames(gamesData);
+            if (sortMyTeams && myTeams.length > 0) {
+                const myGames = gamesData.filter((g) =>
+                    myTeams.some((t) => teamMatchesGame(t, g.away_team) || teamMatchesGame(t, g.home_team))
+                );
+                const otherGames = gamesData.filter((g) =>
+                    !myTeams.some((t) => teamMatchesGame(t, g.away_team) || teamMatchesGame(t, g.home_team))
+                );
+                setGames([...myGames, ...otherGames]);
+            } else {
+                setGames(gamesData);
+            }
 
             if (scoresRes.ok) {
                 const scoresData: Score[] = await scoresRes.json();
@@ -125,7 +136,7 @@ export default function Home() {
         } finally {
             setGamesLoading(false);
         }
-    }, []);
+    }, [myTeams]);
 
     const loadMyTeamsGames = useCallback(async (teams: TeamDef[]) => {
         if (teams.length === 0) return;
@@ -161,30 +172,40 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
-        loadGames(currentSport);
+        if (!myTeamsActive) {
+            loadGames(currentSport);
+        }
     }, [currentSport, loadGames]);
 
     const handleSportChange = useCallback((sport: Sport) => {
-        // Switching sport always turns off My Teams
-        setMyTeamsActive(false);
+        setMyTeamsPureMode(false);
         setCurrentSport(sport);
-    }, []);
+        loadGames(sport, myTeamsActive);
+    }, [loadGames, myTeamsActive]);
 
     const handleMyTeamsToggle = useCallback(() => {
         if (myTeams.length === 0) {
             setShowWizard(true);
             return;
         }
+        if (myTeamsActive && !myTeamsPureMode) {
+            // On a sport tab with My Teams active — go back to pure My Teams mode
+            setMyTeamsPureMode(true);
+            loadMyTeamsGames(myTeams);
+            return;
+        }
         setMyTeamsActive((prev) => {
             const next = !prev;
             if (next) {
+                setMyTeamsPureMode(true);
                 loadMyTeamsGames(myTeams);
             } else {
+                setMyTeamsPureMode(false);
                 loadGames(currentSport);
             }
             return next;
         });
-    }, [myTeams, currentSport, loadMyTeamsGames, loadGames]);
+    }, [myTeams, myTeamsActive, myTeamsPureMode, currentSport, loadMyTeamsGames, loadGames]);
 
     const handleWizardConfirm = useCallback((teams: TeamDef[]) => {
         const ids = teams.map((t) => t.id);
@@ -386,6 +407,7 @@ export default function Home() {
                             onSportChange={handleSportChange}
                             onSelectGame={selectGame}
                             myTeamsActive={myTeamsActive}
+                            myTeamsPureMode={myTeamsPureMode}
                             myTeams={myTeams}
                             onMyTeamsToggle={handleMyTeamsToggle}
                             onEditMyTeams={() => setShowWizard(true)}
