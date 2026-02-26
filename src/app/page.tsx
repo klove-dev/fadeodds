@@ -404,16 +404,11 @@ export default function Home() {
                     />
                 ) : (
                     <>
-                        <div className="logo">
-                            FADE<span className="logo-accent">ODDS</span>
-                        </div>
-                        <p style={{
-                            textAlign: 'center', fontSize: '0.62rem', color: 'var(--dim)',
-                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px',
-                            margin: '6px 0 0'
-                        }}>
-                            Live Odds · AI Analysis · Sharp Intelligence
-                        </p>
+                        <img
+                            src="/logo.png"
+                            alt="FadeOdds"
+                            style={{ display: 'block', margin: '90px auto 0', height: '60px', width: 'auto' }}
+                        />
                         <GamesGrid
                             games={games}
                             scores={scores}
