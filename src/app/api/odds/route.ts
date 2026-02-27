@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
     // Cache miss - fetch from Odds API
     try {
-        const url = `https://api.the-odds-api.com/v4/sports/${sport}/odds/?apiKey=${apiKey}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&dateFormat=iso`;
+        const url = `https://api.the-odds-api.com/v4/sports/${sport}/odds/?apiKey=${apiKey}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&dateFormat=iso&includeLinks=true`;
         const response = await fetch(url);
 
         if (!response.ok) {

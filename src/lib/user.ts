@@ -13,7 +13,20 @@ export async function syncUser(clerkUserId: string, email: string): Promise<void
         );
 
     if (error) {
-        console.error('Failed to sync user:', error.message);
+        // Email already exists under a different id (e.g. user re-registered).
+        // Update the existing row so the current Clerk id owns it.
+        if (error.code === '23505' && error.message.includes('users_email_key')) {
+            const { error: updateError } = await supabaseAdmin
+                .from('users')
+                .update({ id: clerkUserId, updated_at: new Date().toISOString() })
+                .eq('email', email);
+
+            if (updateError) {
+                console.error('Failed to sync user (email conflict recovery):', updateError.message);
+            }
+        } else {
+            console.error('Failed to sync user:', error.message);
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { teamLogoUrl, type TeamDef } from '@/lib/teams';
+import { teamLogoUrl, searchTeam, type TeamDef } from '@/lib/teams';
 
 interface MyTeamsWizardProps {
     allTeams: TeamDef[];
@@ -21,13 +21,14 @@ export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfi
         const leagueFiltered = selectedLeague
             ? allTeams.filter((t) => t.league === selectedLeague)
             : allTeams;
-        if (!q) return leagueFiltered.slice(0, 60);
-        return leagueFiltered.filter((t) =>
-            t.name.toLowerCase().includes(q) ||
-            t.city.toLowerCase().includes(q) ||
-            t.mascot.toLowerCase().includes(q)
-        );
-    }, [query, allTeams, selectedLeague]);
+        const filtered = q
+            ? leagueFiltered.filter((t) => searchTeam(t, q))
+            : leagueFiltered.slice(0, 60);
+        // Selected teams bubble to the top
+        const sel = filtered.filter((t) => selected.has(t.id));
+        const rest = filtered.filter((t) => !selected.has(t.id));
+        return [...sel, ...rest];
+    }, [query, allTeams, selectedLeague, selected]);
 
     const selectedTeams = useMemo(
         () => allTeams.filter((t) => selected.has(t.id)),
@@ -58,14 +59,14 @@ export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfi
 
                 <div className="wizard-header">
                     <div className="wizard-title">MY TEAMS</div>
-                    <div className="wizard-sub">Follow your teams — we'll surface their games first</div>
+                    <div className="wizard-sub">Follow your teams — we&apos;ll surface their games first</div>
                 </div>
 
                 <div className="wizard-body">
                     <input
                         className="wizard-search"
                         type="text"
-                        placeholder="Search any team, city, or mascot..."
+                        placeholder="Search teams..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         autoFocus
@@ -76,7 +77,7 @@ export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfi
                             <button
                                 key={league}
                                 className={`wizard-league-tab ${selectedLeague === league ? 'active' : ''}`}
-                                onClick={() => setSelectedLeague(league)}
+                                onClick={() => setSelectedLeague((prev) => prev === league ? '' : league)}
                             >
                                 {league}
                             </button>
@@ -115,7 +116,7 @@ export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfi
                         )}
                     </div>
                 </div>
-                
+
                 {(selectedTeams.length > 0 || savedTeamIds.length > 0) && (
                     <div className="wizard-footer">
                         <button

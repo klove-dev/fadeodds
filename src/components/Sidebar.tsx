@@ -3,17 +3,24 @@
 import { useState } from 'react';
 import { SavedBet } from '@/types';
 import { formatTime } from '@/lib/utils';
+import { LEGAL_BETTING_STATES } from '@/lib/sportsbooks';
 
 interface SidebarProps {
     isOpen: boolean;
     savedBets: SavedBet[];
     sessionHistory: { title: string; sport: string }[];
     oddsCredits: string | null;
+    theme: 'light' | 'dark';
+    bettingState: string | null;
+    showOddsTimestamp: boolean;
     onClose: () => void;
     onSelectHistory: (title: string) => void;
     onRemoveBet: (id: string) => void;
     onOpenAccount: () => void;
     onOpenPricing: () => void;
+    onToggleTheme: () => void;
+    onBettingStateChange: (state: string | null) => void;
+    onToggleOddsTimestamp: () => void;
 }
 
 function isActiveBet(bet: SavedBet): boolean {
@@ -25,13 +32,19 @@ export default function Sidebar({
     savedBets,
     sessionHistory,
     oddsCredits,
+    theme,
+    bettingState,
+    showOddsTimestamp,
     onClose,
     onSelectHistory,
     onRemoveBet,
     onOpenAccount,
     onOpenPricing,
+    onToggleTheme,
+    onBettingStateChange,
+    onToggleOddsTimestamp,
 }: SidebarProps) {
-    const [activeTab, setActiveTab] = useState<'tracker' | 'history'>('tracker');
+    const [activeTab, setActiveTab] = useState<'tracker' | 'history' | 'settings'>('tracker');
     const [betFilter, setBetFilter] = useState<'active' | 'archived'>('active');
 
     const filteredBets = savedBets.filter((b) =>
@@ -64,6 +77,12 @@ export default function Sidebar({
                         onClick={() => setActiveTab('history')}
                     >
                         History
+                    </div>
+                    <div
+                        className={`sidebar-tab ${activeTab === 'settings' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('settings')}
+                    >
+                        Settings
                     </div>
                 </div>
 
@@ -132,6 +151,64 @@ export default function Sidebar({
                             )}
                         </div>
                     )}
+
+                    {activeTab === 'settings' && (
+                        <div>
+                            <div className="settings-section">
+                                <div className="settings-label">Appearance</div>
+                                <div className="settings-toggle-row">
+                                    <span className="settings-toggle-label">Dark mode</span>
+                                    <button
+                                        className={`settings-toggle ${theme === 'dark' ? 'on' : ''}`}
+                                        onClick={onToggleTheme}
+                                        aria-label="Toggle dark mode"
+                                    >
+                                        <span className="settings-toggle-knob" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="settings-section" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                                <div className="settings-label">Betting State</div>
+                                <div className="settings-sub">
+                                    We&apos;ll only show sportsbooks legal in your state and link you directly to their site.
+                                </div>
+                                <select
+                                    className="settings-state-select"
+                                    value={bettingState ?? ''}
+                                    onChange={(e) => onBettingStateChange(e.target.value || null)}
+                                >
+                                    <option value="">— Select your state —</option>
+                                    {LEGAL_BETTING_STATES.map((s) => (
+                                        <option key={s.abbr} value={s.abbr}>{s.name} ({s.abbr})</option>
+                                    ))}
+                                </select>
+                                {bettingState && (
+                                    <button
+                                        className="settings-clear-btn"
+                                        onClick={() => onBettingStateChange(null)}
+                                    >
+                                        Clear state
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="settings-section" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                                <div className="settings-label">Dev Options</div>
+
+                                <div className="settings-toggle-row">
+                                    <span className="settings-toggle-label">Show odds timestamp</span>
+                                    <button
+                                        className={`settings-toggle ${showOddsTimestamp ? 'on' : ''}`}
+                                        onClick={onToggleOddsTimestamp}
+                                        aria-label="Toggle odds timestamp"
+                                    >
+                                        <span className="settings-toggle-knob" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="sidebar-footer">
@@ -143,7 +220,7 @@ export default function Sidebar({
                             </svg>
                             <div className="status-dot" />
                         </div>
-                        <div>
+                        <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.8rem', fontWeight: 900 }}>Account</div>
                             <div
                                 style={{ fontSize: '0.6rem', color: 'var(--gold)', fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}

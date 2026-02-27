@@ -11,6 +11,9 @@ interface AnalysisViewProps {
     analysis: Analysis | null;
     loading: boolean;
     savedBets: SavedBet[];
+    bettingState: string | null;
+    oddsTimestamp: string | null;
+    showOddsTimestamp: boolean;
     onBack: () => void;
     onSaveBet: (favId: string, bookTitle: string) => void;
 }
@@ -87,6 +90,9 @@ export default function AnalysisView({
     analysis,
     loading,
     savedBets,
+    bettingState,
+    oddsTimestamp,
+    showOddsTimestamp,
     onBack,
     onSaveBet,
 }: AnalysisViewProps) {
@@ -133,17 +139,25 @@ export default function AnalysisView({
 
     return (
         <div className="analysis-container">
+            {/* Breadcrumb nav */}
+            <div className="analysis-breadcrumb">
+                <button className="breadcrumb-back" onClick={onBack}>
+                    <img src="/logo.png" alt="FadeOdds" className="breadcrumb-logo" />
+                    <span className="breadcrumb-sep">←</span>
+                    <span className="breadcrumb-games">Games</span>
+                    <span className="breadcrumb-sep">/</span>
+                    <span className="breadcrumb-current">{title}</span>
+                </button>
+            </div>
+
             <div className="game-header">
                 <div>
                     <div className="game-header-teams">{title}</div>
                     <div className="game-header-meta">{meta}</div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {analysis?.confidence && (
-                        <div className="conf-badge">{analysis.confidence}% Confidence</div>
-                    )}
-                    <button className="back-btn" onClick={onBack}>← Back to Games</button>
-                </div>
+                {analysis?.confidence && (
+                    <div className="conf-badge">{analysis.confidence}% Confidence</div>
+                )}
             </div>
 
             <div className="analysis-grid">
@@ -221,6 +235,9 @@ export default function AnalysisView({
                 <OddsPanel
                     game={game}
                     savedBetIds={savedBetIds}
+                    bettingState={bettingState}
+                    oddsTimestamp={oddsTimestamp}
+                    showOddsTimestamp={showOddsTimestamp}
                     onSaveBet={onSaveBet}
                 />
             </div>

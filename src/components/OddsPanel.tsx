@@ -1,11 +1,15 @@
 'use client';
 
 import { Game, Bookmaker } from '@/types';
-import { fmt, shortTeam } from '@/lib/utils';
+import { fmt, shortTeam, formatOddsTimestamp } from '@/lib/utils';
+import { getBetUrl, isBookAvailable, rewriteLinkForState } from '@/lib/sportsbooks';
 
 interface OddsPanelProps {
     game: Game;
     savedBetIds: string[];
+    bettingState: string | null;
+    oddsTimestamp: string | null;
+    showOddsTimestamp: boolean;
     onSaveBet: (bookKey: string, bookTitle: string) => void;
 }
 
@@ -23,8 +27,8 @@ function findBestOdds(books: Bookmaker[], game: Game) {
     return { awayML, total };
 }
 
-export default function OddsPanel({ game, savedBetIds, onSaveBet }: OddsPanelProps) {
-    const books = game.bookmakers || [];
+export default function OddsPanel({ game, savedBetIds, bettingState, oddsTimestamp, showOddsTimestamp, onSaveBet }: OddsPanelProps) {
+    const books = (game.bookmakers || []).filter((b) => isBookAvailable(b.key, bettingState));
 
     if (!books.length) {
         return (
@@ -38,6 +42,9 @@ export default function OddsPanel({ game, savedBetIds, onSaveBet }: OddsPanelPro
 
     return (
         <div className="odds-panel">
+            {showOddsTimestamp && oddsTimestamp && (
+                <div className="odds-timestamp">odds as of {formatOddsTimestamp(oddsTimestamp)}</div>
+            )}
             {books.map((book, i) => {
                 const h2h = book.markets?.find((m) => m.key === 'h2h');
                 const spreads = book.markets?.find((m) => m.key === 'spreads');
@@ -64,7 +71,7 @@ export default function OddsPanel({ game, savedBetIds, onSaveBet }: OddsPanelPro
                                     className={`star-btn ${isStarred ? 'starred' : ''}`}
                                     onClick={() => onSaveBet(favId, book.title)}
                                 >
-                                    {isStarred ? '★' : '☆'} Save
+                                    {isStarred ? '★' : '☆'}
                                 </button>
                             </div>
                         </div>
@@ -89,7 +96,12 @@ export default function OddsPanel({ game, savedBetIds, onSaveBet }: OddsPanelPro
                                 <div className="market-subval">{fmt(overLine?.price)}</div>
                             </div>
                         </div>
-                        <a href="#" className="bet-link" onClick={(e) => e.preventDefault()}>
+                        <a
+                            href={book.link ? rewriteLinkForState(book.link, bettingState) : getBetUrl(book.key, bettingState, game.sport_title)}
+                            className="bet-link"
+                            target="_blank"
+                            rel="noreferrer noopener"
+                        >
                             Bet at {book.title} →
                         </a>
                     </div>

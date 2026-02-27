@@ -1,7 +1,7 @@
 'use client';
 
 import { Game, Score, Sport } from '@/types';
-import { makeScoreKey } from '@/lib/utils';
+import { makeScoreKey, formatOddsTimestamp } from '@/lib/utils';
 import type { TeamDef } from '@/lib/teams';
 import { teamMatchesGame } from '@/lib/teams';
 import GameCard from './GameCard';
@@ -26,6 +26,8 @@ interface GamesGridProps {
     myTeams: TeamDef[];
     onMyTeamsToggle: () => void;
     onEditMyTeams: () => void;
+    oddsTimestamp: string | null;
+    showOddsTimestamp: boolean;
 }
 
 export default function GamesGrid({
@@ -40,6 +42,8 @@ export default function GamesGrid({
     myTeams,
     onMyTeamsToggle,
     onEditMyTeams,
+    oddsTimestamp,
+    showOddsTimestamp,
 }: GamesGridProps) {
     const scoreMap: Record<string, Score> = {};
     scores.forEach((s) => {
@@ -80,7 +84,12 @@ export default function GamesGrid({
             </div>
 
             <div className="games-section">
-                <div className="section-label">{sectionLabel}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+                    <div className="section-label">{sectionLabel}</div>
+                    {showOddsTimestamp && oddsTimestamp && !loading && (
+                        <span className="odds-timestamp">odds as of {formatOddsTimestamp(oddsTimestamp)}</span>
+                    )}
+                </div>
                 {myTeamsPureMode && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
                         <button className="my-teams-manage-btn" onClick={onEditMyTeams}>
