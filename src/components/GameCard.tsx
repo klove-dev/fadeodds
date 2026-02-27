@@ -128,8 +128,12 @@ export default function GameCard({ game, score, onSelect, isMyTeam }: GameCardPr
                 </div>
             </div>
 
-            <button className="analyze-btn">Analyze with AI</button>
-            <div className="books-count">{books.length} book{books.length !== 1 ? 's' : ''} tracked</div>
+            <button className="sharp-lines-btn">
+                Sharp Lines
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+            </button>
         </div>
     );
 }
