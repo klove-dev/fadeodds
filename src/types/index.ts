@@ -53,6 +53,7 @@ export interface AnalysisTile {
 
 export interface Analysis {
     tiles: AnalysisTile[];
+    blurb?: string;
     expertTake: string;
     recommendation: string;
     confidence: number;

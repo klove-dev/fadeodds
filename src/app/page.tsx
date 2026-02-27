@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
 import { teamMatchesGame, type TeamDef } from '@/lib/teams';
 import Header from '@/components/Header';
@@ -42,6 +42,7 @@ export default function Home() {
     const [injuries, setInjuries]         = useState<Injury[]>([]);
     const [analysis, setAnalysis]         = useState<Analysis | null>(null);
     const [analysisLoading, setAnalysisLoading] = useState(false);
+    const [analysisError, setAnalysisError] = useState<'upgrade' | 'limit' | 'error' | null>(null);
     const [sidebarOpen, setSidebarOpen]   = useState(false);
     const [savedBets, setSavedBets]       = useState<SavedBet[]>([]);
     const [sessionHistory, setSessionHistory] = useState<{ title: string; sport: string }[]>([]);
@@ -56,11 +57,15 @@ export default function Home() {
 
     // My Teams state
     const [myTeams, setMyTeams]             = useState<TeamDef[]>([]);
+    const myTeamsRef = useRef<TeamDef[]>([]);
     const [myTeamsActive, setMyTeamsActive] = useState(false);
     const [showWizard, setShowWizard]       = useState(false);
     const [allTeams, setAllTeams]           = useState<TeamDef[]>([]);
     const [myTeamsPureMode, setMyTeamsPureMode] = useState(false);
     const [leagues, setLeagues] = useState<string[]>([]);
+
+    // Keep myTeamsRef in sync so loadGames can read latest teams without a dep on myTeams
+    useEffect(() => { myTeamsRef.current = myTeams; }, [myTeams]);
 
     useEffect(() => {
         if (!isSignedIn || !user) return;
@@ -170,12 +175,14 @@ export default function Home() {
             if (remaining && remaining !== 'unknown') setOddsCredits(remaining);
             setOddsTimestamp(new Date().toISOString());
 
-            if (sortMyTeams && myTeams.length > 0) {
+            // Read latest teams from ref to avoid stale closure without adding myTeams as a dep
+            const teams = myTeamsRef.current;
+            if (sortMyTeams && teams.length > 0) {
                 const myGames = gamesData.filter((g) =>
-                    myTeams.some((t) => teamMatchesGame(t, g.away_team) || teamMatchesGame(t, g.home_team))
+                    teams.some((t) => teamMatchesGame(t, g.away_team) || teamMatchesGame(t, g.home_team))
                 );
                 const otherGames = gamesData.filter((g) =>
-                    !myTeams.some((t) => teamMatchesGame(t, g.away_team) || teamMatchesGame(t, g.home_team))
+                    !teams.some((t) => teamMatchesGame(t, g.away_team) || teamMatchesGame(t, g.home_team))
                 );
                 setGames([...myGames, ...otherGames]);
             } else {
@@ -192,7 +199,7 @@ export default function Home() {
         } finally {
             setGamesLoading(false);
         }
-    }, [myTeams]);
+    }, []); // No myTeams dep — reads from ref to prevent double-load on teams init
 
     const loadMyTeamsGames = useCallback(async (teams: TeamDef[]) => {
         if (teams.length === 0) return;
@@ -317,6 +324,7 @@ export default function Home() {
 
         setSelectedGame(game);
         setAnalysis(null);
+        setAnalysisError(null);
         setAnalysisLoading(true);
 
         const gameInjuries = await getGameInjuries(game);
@@ -341,15 +349,14 @@ export default function Home() {
             });
 
             if (res.status === 401) {
-                setAnalysis(null);
+                setAnalysisError('upgrade');
                 setAnalysisLoading(false);
                 return;
             }
 
             if (res.status === 403) {
                 const data = await res.json();
-                console.warn('Access denied:', data.code);
-                setAnalysis(null);
+                setAnalysisError(data.code === 'LIMIT_REACHED' ? 'limit' : 'upgrade');
                 setAnalysisLoading(false);
                 return;
             }
@@ -359,6 +366,7 @@ export default function Home() {
             setAnalysis(data);
         } catch (err) {
             console.error('Analysis failed:', err);
+            setAnalysisError('error');
         } finally {
             setAnalysisLoading(false);
         }
@@ -453,6 +461,7 @@ export default function Home() {
                         game={selectedGame}
                         injuries={injuries}
                         analysis={analysis}
+                        analysisError={analysisError}
                         loading={analysisLoading}
                         savedBets={savedBets}
                         bettingState={bettingState}

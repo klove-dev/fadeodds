@@ -6,7 +6,9 @@ export function fmt(price: number | undefined | null): string {
 export function shortTeam(name: string): string {
     if (!name) return '-';
     const parts = name.trim().split(' ');
-    return parts.length > 2 ? parts.slice(-1)[0] : name;
+    // Only truncate 4+ word names (e.g. "University of X Mascots") to last word
+    // 3-word names like "Cornell Big Red" or "Oklahoma City Thunder" show in full
+    return parts.length > 3 ? parts.slice(-1)[0] : name;
 }
 
 export function shortName(name: string): string {

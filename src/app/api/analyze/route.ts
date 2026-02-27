@@ -111,6 +111,7 @@ CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no extra text. Use
     {"label": "string", "val": "string"},
     {"label": "string", "val": "string"}
   ],
+  "blurb": "string (1 sentence: describe the betting storyline or market context for this game — e.g. sharp money on the home spread, public fading the away team, or line movement signal)",
   "expertTake": "string (2 sharp sentences on the market edge and where the value is)",
   "recommendation": "string (e.g. 'Lakers -3.5' or 'OVER 224.5' or 'PHI Moneyline')",
   "confidence": number (integer 55-92),
