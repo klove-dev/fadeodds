@@ -12,8 +12,27 @@ import { useUser } from '@clerk/nextjs';
 
 const LS_KEY = 'fadeodds_my_teams';
 
+function useTheme() {
+    const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+    useEffect(() => {
+        const stored = localStorage.getItem('fadeodds-theme') as 'light' | 'dark' | null;
+        if (stored) setTheme(stored);
+    }, []);
+
+    const toggle = () => {
+        const next = theme === 'light' ? 'dark' : 'light';
+        setTheme(next);
+        localStorage.setItem('fadeodds-theme', next);
+        document.documentElement.setAttribute('data-theme', next);
+    };
+
+    return { theme, toggle };
+}
+
 export default function Home() {
     const { user, isSignedIn } = useUser();
+    const { theme, toggle: toggleTheme } = useTheme();
 
     const [currentSport, setCurrentSport] = useState<Sport>('basketball_nba');
     const [games, setGames]               = useState<Game[]>([]);
@@ -27,6 +46,13 @@ export default function Home() {
     const [savedBets, setSavedBets]       = useState<SavedBet[]>([]);
     const [sessionHistory, setSessionHistory] = useState<{ title: string; sport: string }[]>([]);
     const [oddsCredits, setOddsCredits]   = useState<string | null>(null);
+
+    // Betting state (stored in Supabase per-user)
+    const [bettingState, setBettingState] = useState<string | null>(null);
+
+    // Odds timestamp + dev toggle
+    const [oddsTimestamp, setOddsTimestamp] = useState<string | null>(null);
+    const [showOddsTimestamp, setShowOddsTimestamp] = useState(true);
 
     // My Teams state
     const [myTeams, setMyTeams]             = useState<TeamDef[]>([]);
@@ -56,6 +82,26 @@ export default function Home() {
             .then((data: string[]) => setLeagues(data))
             .catch(console.error);
     }, []);
+
+    // Load betting state from Supabase on sign-in
+    useEffect(() => {
+        if (!isSignedIn || !user) return;
+        fetch('/api/user/state')
+            .then((r) => r.json())
+            .then((data: { state: string | null }) => setBettingState(data.state ?? null))
+            .catch(console.error);
+    }, [isSignedIn, user]);
+
+    const handleBettingStateChange = useCallback((state: string | null) => {
+        setBettingState(state);
+        if (isSignedIn) {
+            fetch('/api/user/state', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state }),
+            }).catch(console.error);
+        }
+    }, [isSignedIn]);
 
     // Load saved bets from API on sign-in
     useEffect(() => {
@@ -122,6 +168,7 @@ export default function Home() {
 
             const remaining = oddsRes.headers.get('x-requests-remaining');
             if (remaining && remaining !== 'unknown') setOddsCredits(remaining);
+            setOddsTimestamp(new Date().toISOString());
 
             if (sortMyTeams && myTeams.length > 0) {
                 const myGames = gamesData.filter((g) =>
@@ -172,6 +219,7 @@ export default function Home() {
             );
             setGames(filtered);
             setScores([]); // scores are per-sport; skip for cross-sport view
+            setOddsTimestamp(new Date().toISOString());
         } catch (err) {
             console.error('Failed to load My Teams games:', err);
             setGames([]);
@@ -187,10 +235,11 @@ export default function Home() {
     }, [currentSport, loadGames]);
 
     const handleSportChange = useCallback((sport: Sport) => {
+        if (sport === currentSport && !myTeamsPureMode) return;
         setMyTeamsPureMode(false);
         setCurrentSport(sport);
         loadGames(sport, myTeamsActive);
-    }, [loadGames, myTeamsActive]);
+    }, [loadGames, myTeamsActive, currentSport, myTeamsPureMode]);
 
     const handleMyTeamsToggle = useCallback(() => {
         if (myTeams.length === 0) {
@@ -366,7 +415,8 @@ export default function Home() {
         <>
             <Header
                 games={games}
-                onMenuClick={() => setSidebarOpen(true)}
+                onMenuClick={() => setSidebarOpen((prev) => !prev)}
+                onSelectGame={selectGame}
             />
 
             <Sidebar
@@ -374,11 +424,17 @@ export default function Home() {
                 savedBets={savedBets}
                 sessionHistory={sessionHistory}
                 oddsCredits={oddsCredits}
+                theme={theme}
+                bettingState={bettingState}
                 onClose={() => setSidebarOpen(false)}
                 onSelectHistory={handleSelectHistory}
                 onRemoveBet={handleRemoveBet}
                 onOpenAccount={() => {}}
                 onOpenPricing={() => {}}
+                onToggleTheme={toggleTheme}
+                onBettingStateChange={handleBettingStateChange}
+                showOddsTimestamp={showOddsTimestamp}
+                onToggleOddsTimestamp={() => setShowOddsTimestamp((p) => !p)}
             />
 
             {showWizard && (
@@ -399,6 +455,9 @@ export default function Home() {
                         analysis={analysis}
                         loading={analysisLoading}
                         savedBets={savedBets}
+                        bettingState={bettingState}
+                        oddsTimestamp={oddsTimestamp}
+                        showOddsTimestamp={showOddsTimestamp}
                         onBack={() => setSelectedGame(null)}
                         onSaveBet={handleSaveBet}
                     />
@@ -421,6 +480,8 @@ export default function Home() {
                             myTeams={myTeams}
                             onMyTeamsToggle={handleMyTeamsToggle}
                             onEditMyTeams={() => setShowWizard(true)}
+                            oddsTimestamp={oddsTimestamp}
+                            showOddsTimestamp={showOddsTimestamp}
                         />
                     </>
                 )}

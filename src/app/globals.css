@@ -97,6 +97,12 @@ body {
     padding: 0 28px; font-size: 0.62rem;
     font-weight: 700; text-transform: uppercase; color: var(--dim);
 }
+.ticker-item-btn {
+    background: none; border: none; cursor: pointer; font-family: inherit;
+    transition: color 0.15s;
+}
+.ticker-item-btn:hover { color: var(--text); }
+.ticker-wrap:hover .ticker { animation-play-state: paused; }
 .t-green { color: var(--cobalt); margin-left: 5px; }
 .t-gold  { color: var(--cobalt); margin-left: 5px; }
 
@@ -231,12 +237,18 @@ body {
 
 .analysis-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
 
+/* Breadcrumb nav at top of game page */
+.analysis-breadcrumb { margin-bottom: 18px; }
+.breadcrumb-back { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; padding: 4px 0; color: var(--dim); font-size: 0.72rem; font-weight: 700; }
+.breadcrumb-back:hover .breadcrumb-games { color: var(--cobalt); }
+.breadcrumb-logo { height: 22px; width: auto; display: block; opacity: 0.85; }
+.breadcrumb-sep { color: var(--muted); font-size: 0.72rem; }
+.breadcrumb-games { color: var(--dim); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.65rem; }
+.breadcrumb-current { color: var(--muted); font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+
 .game-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
 .game-header-teams { font-size: 1.35rem; font-weight: 900; }
 .game-header-meta { font-size: 0.62rem; color: var(--dim); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
-
-.back-btn { background: var(--card-sub); border: 1px solid var(--border); color: var(--dim); padding: 8px 16px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.back-btn:hover { color: var(--text); border-color: var(--border-strong); }
 
 .conf-badge { background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); color: var(--cobalt); padding: 6px 14px; border-radius: 100px; font-size: 0.68rem; font-weight: 900; text-transform: uppercase; }
 
@@ -365,6 +377,22 @@ body {
 .checkout-submit { background: var(--cobalt); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 900; font-size: 0.72rem; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
 .checkout-err { color: #EF4444; font-size: 0.65rem; margin-top: 8px; display: none; }
 
+/* Settings tab */
+.settings-section { padding: 4px 0 20px; }
+.settings-label { font-size: 0.58rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--dim); margin-bottom: 6px; }
+.settings-sub { font-size: 0.65rem; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+.settings-state-select { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 0.78rem; font-family: inherit; outline: none; cursor: pointer; appearance: auto; }
+.settings-state-select:focus { border-color: var(--cobalt); }
+.settings-clear-btn { margin-top: 8px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--dim); font-size: 0.62rem; font-weight: 700; padding: 5px 12px; cursor: pointer; }
+.settings-clear-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.settings-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+.settings-toggle-label { font-size: 0.7rem; color: var(--muted); }
+.settings-toggle { position: relative; width: 34px; height: 18px; background: var(--border); border: none; border-radius: 9px; cursor: pointer; padding: 0; transition: background 0.2s; flex-shrink: 0; }
+.settings-toggle.on { background: var(--cobalt); }
+.settings-toggle-knob { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; display: block; }
+.settings-toggle.on .settings-toggle-knob { transform: translateX(16px); }
+.odds-timestamp { font-size: 0.58rem; color: var(--dim); font-weight: 400; font-style: italic; margin-bottom: 10px; }
+
 .account-box { max-width: 440px; }
 .acct-section { padding: 24px 26px; border-bottom: 1px solid var(--border); }
 .acct-section:last-child { border-bottom: none; }
@@ -427,7 +455,7 @@ body {
 .wizard-search:focus { border-color: var(--cobalt); }
 .wizard-search::placeholder { color: var(--muted); }
 
-.wizard-results { display: flex; flex-direction: column; gap: 2px; }
+.wizard-results { display: flex; flex-direction: column; gap: 2px; min-height: 320px; }
 
 .wizard-team-row {
     display: flex; align-items: center; gap: 12px;

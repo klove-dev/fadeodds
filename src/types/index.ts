@@ -12,6 +12,7 @@ export interface Market {
 export interface Bookmaker {
     key: string;
     title: string;
+    link?: string;
     markets: Market[];
 }
 

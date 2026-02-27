@@ -39,3 +39,9 @@ export function lastWord(name: string): string {
 export function makeScoreKey(away: string, home: string): string {
     return `${lastWord(away)}_${lastWord(home)}`.toLowerCase();
 }
+
+export function formatOddsTimestamp(iso: string): string {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
