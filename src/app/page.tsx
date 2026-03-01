@@ -467,6 +467,7 @@ export default function Home() {
                         bettingState={bettingState}
                         oddsTimestamp={oddsTimestamp}
                         showOddsTimestamp={showOddsTimestamp}
+                        allTeams={allTeams}
                         onBack={() => setSelectedGame(null)}
                         onSaveBet={handleSaveBet}
                     />

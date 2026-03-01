@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getUserTier, getUsage, incrementUsage, syncUser } from '@/lib/user';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -31,13 +31,14 @@ async function cacheAnalysis(gameId: string, sport: string, analysis: any): Prom
 }
 
 export async function POST(request: Request) {
-    const { userId, sessionClaims } = await auth();
+    const { userId } = await auth();
 
     if (!userId) {
         return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const email = sessionClaims?.email as string || '';
+    const user = await currentUser();
+    const email = user?.emailAddresses[0]?.emailAddress || '';
     await syncUser(userId, email);
 
     const apiKey = process.env.ANTHROPIC_API_KEY;

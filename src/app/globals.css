@@ -435,9 +435,143 @@ body {
 .usage-cell-num { font-size: 1.5rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
 .usage-cell-max { font-size: 0.56rem; color: var(--dim); margin-top: 2px; }
 
+/* ─── Section chip label ─────────────────────────────────────────────────── */
+.section-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.52rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--dim);
+    margin-bottom: 10px;
+}
+
+/* ─── Odds Matrix Table ──────────────────────────────────────────────────── */
+.odds-table-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+}
+.odds-table-scroll {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.odds-matrix {
+    border-collapse: collapse; width: 100%; min-width: 520px;
+}
+
+/* Top-left corner cell */
+.odds-matrix-corner {
+    position: sticky; left: 0; z-index: 2;
+    background: var(--card);
+    width: 88px; min-width: 88px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border-strong) !important;
+}
+
+/* Book column headers */
+.odds-matrix-book-th {
+    padding: 12px 10px 10px; text-align: center;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    min-width: 108px; vertical-align: top;
+    transition: background 0.15s;
+}
+.odds-matrix-book-th:last-child { border-right: none; }
+.odds-matrix-book-th:hover { background: var(--card-sub); }
+.odds-matrix-book-th.best-book-col {
+    background: rgba(37,99,235,0.04);
+    border-top: 2px solid var(--cobalt);
+}
+
+.odds-matrix-book-name {
+    font-size: 0.68rem; font-weight: 900;
+    white-space: nowrap; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    gap: 5px; margin-bottom: 5px; flex-wrap: wrap;
+    transition: color 0.15s;
+}
+.odds-matrix-book-name:hover { color: var(--cobalt); }
+
+.matrix-best-badge {
+    background: var(--cobalt); color: #fff;
+    font-size: 0.4rem; font-weight: 900; padding: 2px 5px;
+    border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.matrix-star {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1;
+    transition: color 0.15s;
+}
+.matrix-star:hover, .matrix-star.starred { color: var(--cobalt); }
+
+/* Row label cells — sticky left */
+.odds-matrix-row-label {
+    position: sticky; left: 0; z-index: 1;
+    background: var(--card);
+    font-size: 0.58rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--dim);
+    padding: 13px 12px; white-space: nowrap;
+    border-right: 1px solid var(--border-strong) !important;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Alternating row backgrounds for sticky label */
+.odds-matrix tbody tr:nth-child(odd) .odds-matrix-row-label  { background: var(--card-sub); }
+.odds-matrix tbody tr:nth-child(even) .odds-matrix-row-label { background: var(--card); }
+
+/* Data cells */
+.odds-matrix-cell {
+    padding: 12px 10px; text-align: center;
+    cursor: pointer; transition: background 0.12s;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    min-width: 108px;
+}
+.odds-matrix-cell:last-child { border-right: none; }
+.odds-matrix tbody tr:nth-child(odd) .odds-matrix-cell   { background: var(--card-sub); }
+.odds-matrix tbody tr:nth-child(even) .odds-matrix-cell  { background: var(--card); }
+.odds-matrix tbody tr:last-child .odds-matrix-cell,
+.odds-matrix tbody tr:last-child .odds-matrix-row-label  { border-bottom: none; }
+.odds-matrix-cell:hover { background: rgba(37,99,235,0.06) !important; }
+
+.omc-main  { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 900; }
+.omc-juice { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--dim); margin-top: 2px; }
+.omc-na    { color: var(--muted); font-size: 0.72rem; }
+.best-cell .omc-main { color: var(--cobalt); }
+.best-cell { position: relative; }
+
+/* ─── Team records inline (in game header) ───────────────────────────────── */
+.team-records-inline {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card-sub); border: 1px solid var(--border);
+    border-radius: 10px; padding: 6px 14px;
+}
+.tri-record { display: flex; align-items: center; gap: 6px; }
+.tri-team   { font-size: 0.6rem; font-weight: 700; color: var(--dim); }
+.tri-val    { font-size: 0.72rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+.tri-label  { font-size: 0.46rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.tri-vs     { font-size: 0.52rem; font-weight: 700; color: var(--muted); }
+
+/* ─── Neural Intelligence panel (full-width) ─────────────────────────────── */
+.neural-panel {
+    background: var(--card-sub); border: 1px solid var(--border);
+    border-radius: 20px; padding: 24px;
+}
+
+/* 4-column intel tiles on desktop, 2-column on mobile */
+.intel-tiles-wide {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 16px;
+}
+
 @media (max-width: 860px) {
     .analysis-grid { grid-template-columns: 1fr; }
     .intel-panel { position: relative; top: 0; }
+    .intel-tiles-wide { grid-template-columns: repeat(2, 1fr); }
+    .game-header { flex-direction: column; align-items: flex-start; }
+    .team-records-inline { width: 100%; justify-content: center; }
+}
+@media (max-width: 560px) {
+    .odds-matrix-book-th, .odds-matrix-cell { min-width: 88px; padding: 10px 8px; }
+    .odds-matrix-corner { width: 72px; min-width: 72px; }
+    .odds-matrix-row-label { padding: 10px 8px; font-size: 0.52rem; }
+    .omc-main { font-size: 0.82rem; }
 }
 @media (max-width: 700px) {
     .pricing-cards { grid-template-columns: repeat(2, 1fr); }
