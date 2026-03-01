@@ -2,7 +2,7 @@
 
 import { Game } from '@/types';
 import { fmt, shortTeam, formatOddsTimestamp } from '@/lib/utils';
-import { getBetUrl, isBookAvailable, rewriteLinkForState } from '@/lib/sportsbooks';
+import { getBetUrl, isBookAvailable, rewriteLinkForState, getBookLogoUrl } from '@/lib/sportsbooks';
 import { type TeamDef, teamLogoUrl, teamMatchesGame } from '@/lib/teams';
 
 interface OddsPanelProps {
@@ -95,10 +95,27 @@ export default function OddsPanel({ game, savedBetIds, bettingState, oddsTimesta
                                 const link    = getLink(book);
                                 const favId   = `${game.id}-${book.key}`;
                                 const starred = savedBetIds.includes(favId);
+                                const logoUrl = getBookLogoUrl(book.key);
                                 return (
                                     <th key={book.key} className={`odds-matrix-book-th${i === 0 ? ' best-book-col' : ''}`}>
                                         <div className="odds-matrix-book-name" onClick={() => openLink(link)}>
-                                            {book.title}
+                                            {logoUrl ? (
+                                                <img
+                                                    src={logoUrl}
+                                                    alt={book.title}
+                                                    title={book.title}
+                                                    width={24}
+                                                    height={24}
+                                                    style={{ objectFit: 'contain' }}
+                                                    onError={(e) => {
+                                                        const img = e.target as HTMLImageElement;
+                                                        img.style.display = 'none';
+                                                        const next = img.nextElementSibling as HTMLElement | null;
+                                                        if (next) next.style.display = 'block';
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <span style={{ display: logoUrl ? 'none' : 'block' }}>{book.title}</span>
                                             {i === 0 && <span className="matrix-best-badge">Best</span>}
                                         </div>
                                         <button
