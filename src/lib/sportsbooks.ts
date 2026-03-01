@@ -113,6 +113,38 @@ export function rewriteLinkForState(url: string, state: string | null): string {
     return url;
 }
 
+// Only include books where Google's favicon CDN returns a real brand icon (not a globe placeholder).
+// Books not listed here will always show their text name — never a broken or generic icon.
+const BOOK_LOGO_DOMAINS: Record<string, string> = {
+    fanduel:            'fanduel.com',
+    draftkings:         'draftkings.com',
+    betmgm:             'betmgm.com',
+    espnbet:            'espnbet.com',
+    betrivers:          'betrivers.com',
+    pointsbet_us:       'pointsbet.com',
+    unibet_us:          'unibet.com',
+    wynnbet:            'wynnbet.com',
+    betway:             'betway.com',
+    fliff:              'getfliff.com',
+    bovada:             'bovada.lv',
+    mybookieag:         'mybookie.ag',
+    betonlineag:        'betonline.ag',
+    superbook:          'superbook.com',
+    pinnacle:           'pinnacle.com',
+    ballybet:           'ballybet.com',
+    betparx:            'betparx.com',
+    hardrockbet:        'hardrockbet.com',
+    tipico_us:          'tipico.com',
+    williamhill_us:     'williamhill.com',
+};
+
+// Returns a logo URL via Google's favicon CDN, or null to force text display.
+export function getBookLogoUrl(bookKey: string): string | null {
+    const domain = BOOK_LOGO_DOMAINS[bookKey];
+    if (!domain) return null;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+}
+
 // Returns URL for a book. Falls back to '#' if not found.
 export function getBetUrl(bookKey: string, state: string | null, sportTitle: string): string {
     const fn = BOOK_URLS[bookKey];

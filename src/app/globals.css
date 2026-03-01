@@ -482,8 +482,8 @@ body {
 .odds-matrix-book-name {
     font-size: 0.68rem; font-weight: 900;
     white-space: nowrap; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    gap: 5px; margin-bottom: 5px; flex-wrap: wrap;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; margin-bottom: 5px;
     transition: color 0.15s;
 }
 .odds-matrix-book-name:hover { color: var(--cobalt); }
