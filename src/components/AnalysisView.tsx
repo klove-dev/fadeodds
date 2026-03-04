@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Game, Injury, Analysis, SavedBet } from '@/types';
+import { useState, useEffect, useRef } from 'react';
+import { Game, Injury, Analysis, SavedBet, Sport } from '@/types';
 import { formatTime, fmt, shortName } from '@/lib/utils';
 import { type TeamDef } from '@/lib/teams';
 import OddsPanel from './OddsPanel';
+import { isBookAvailable } from '@/lib/sportsbooks';
 
 interface AnalysisViewProps {
     game: Game;
+    sport: Sport;
     injuries: Injury[];
     analysis: Analysis | null;
     analysisError: 'upgrade' | 'limit' | 'error' | null;
@@ -143,6 +145,7 @@ function TeamRecords({ game }: { game: Game }) {
 
 export default function AnalysisView({
     game,
+    sport,
     injuries,
     analysis,
     analysisError,
@@ -158,6 +161,12 @@ export default function AnalysisView({
     const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
+    const chatWindowRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const el = chatWindowRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+    }, [chatMessages, chatLoading]);
 
     const savedBetIds = savedBets.map((b) => b.id);
     const title = `${game.away_team} @ ${game.home_team}`;
@@ -172,6 +181,19 @@ export default function AnalysisView({
         setChatLoading(true);
 
         try {
+            // On-demand player splits: extract player name from query and fetch splits
+            let playerSplits = null;
+            const nameMatch = text.match(/\b([A-Z][a-zA-Z']+(?:\s+[A-Z][a-zA-Z']+)+)\b/);
+            if (nameMatch) {
+                try {
+                    const splitsRes = await fetch(`/api/player-splits?name=${encodeURIComponent(nameMatch[1])}&sport=${sport}`);
+                    if (splitsRes.ok) {
+                        const splitsData = await splitsRes.json();
+                        playerSplits = splitsData.splits || null;
+                    }
+                } catch { /* continue without splits */ }
+            }
+
             const res = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -181,9 +203,12 @@ export default function AnalysisView({
                         home_team: game.home_team,
                         sport_title: game.sport_title,
                     },
-                    oddsData: game.bookmakers,
+                    oddsData: game.bookmakers.filter((b) => isBookAvailable(b.key, bettingState)),
+                    bettingState,
                     injuryData: injuries,
                     userQuery: text,
+                    chatHistory: chatMessages,
+                    playerSplits,
                     mode: 'chat',
                 }),
             });
@@ -286,7 +311,7 @@ export default function AnalysisView({
                 )}
 
                 {/* Chat */}
-                <div className="chat-window">
+                <div className="chat-window" ref={chatWindowRef}>
                     {chatMessages.map((msg, i) => (
                         <div key={i} className={`msg ${msg.role === 'user' ? 'msg-user' : 'msg-ai'}`}>
                             {msg.text}

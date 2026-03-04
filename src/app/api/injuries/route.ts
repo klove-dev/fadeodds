@@ -24,18 +24,22 @@ export async function GET(request: Request) {
         if (!response.ok) return Response.json({ injuries: [] });
 
         const data = await response.json();
+
+        const debug = searchParams.get('debug') === 'true';
+        if (debug) return Response.json({ raw: data });
+
         const injuries: any[] = [];
 
-        for (const item of (data.items || [])) {
-            const player = item.athlete?.displayName || item.athlete?.fullName || '';
-            const team = item.athlete?.team?.displayName
-                || item.athlete?.team?.name
-                || item.team?.displayName
-                || '';
-            const status = item.status || item.type?.description || '';
-            const injury = item.shortComment || item.longComment || item.comment || '';
-
-            if (player) injuries.push({ team, player, status, injury });
+        // ESPN returns { injuries: [ { displayName: "Team Name", injuries: [...] } ] }
+        for (const teamEntry of (data.injuries || [])) {
+            const teamName = teamEntry.displayName || teamEntry.team?.displayName || '';
+            for (const item of (teamEntry.injuries || [])) {
+                const player = item.athlete?.displayName || '';
+                const status = item.status || item.type?.description || '';
+                const injury = item.shortComment || item.longComment || '';
+                const returnDate = item.details?.returnDate || '';
+                if (player) injuries.push({ team: teamName, player, status, injury, returnDate });
+            }
         }
 
         return Response.json({ injuries });

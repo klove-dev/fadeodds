@@ -68,7 +68,7 @@ export default function GamesGrid({
                         className={`sport-tab my-teams ${myTeamsPureMode ? 'active' : ''}`}
                         onClick={onMyTeamsToggle}
                     >
-                        ★ My Teams
+                        My Teams
                     </button>
 
                 {/* Sport tabs */}

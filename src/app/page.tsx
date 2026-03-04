@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
 import { teamMatchesGame, type TeamDef } from '@/lib/teams';
+import { isBookAvailable } from '@/lib/sportsbooks';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import GamesGrid from '@/components/GamesGrid';
@@ -58,6 +59,7 @@ export default function Home() {
     // My Teams state
     const [myTeams, setMyTeams]             = useState<TeamDef[]>([]);
     const myTeamsRef = useRef<TeamDef[]>([]);
+    const bettingStateRef = useRef<string | null>(null);
     const [myTeamsActive, setMyTeamsActive] = useState(false);
     const [showWizard, setShowWizard]       = useState(false);
     const [allTeams, setAllTeams]           = useState<TeamDef[]>([]);
@@ -66,6 +68,7 @@ export default function Home() {
 
     // Keep myTeamsRef in sync so loadGames can read latest teams without a dep on myTeams
     useEffect(() => { myTeamsRef.current = myTeams; }, [myTeams]);
+    useEffect(() => { bettingStateRef.current = bettingState; }, [bettingState]);
 
     useEffect(() => {
         if (!isSignedIn || !user) return;
@@ -341,9 +344,10 @@ export default function Home() {
                         sport_title: game.sport_title,
                         commence_time: game.commence_time,
                     },
-                    oddsData: game.bookmakers,
+                    oddsData: game.bookmakers.filter((b) => isBookAvailable(b.key, bettingStateRef.current)),
                     injuryData: gameInjuries,
                     gameId: game.id,
+                    bettingState: bettingStateRef.current,
                     mode: 'initial',
                 }),
             });
@@ -371,6 +375,18 @@ export default function Home() {
             setAnalysisLoading(false);
         }
     }, [games, getGameInjuries]);
+
+    // Re-run analysis when betting state changes while viewing a game
+    const prevBettingStateRef = useRef<string | null | undefined>(undefined);
+    useEffect(() => {
+        if (prevBettingStateRef.current === undefined) {
+            prevBettingStateRef.current = bettingState;
+            return;
+        }
+        if (prevBettingStateRef.current === bettingState) return;
+        prevBettingStateRef.current = bettingState;
+        if (selectedGame) selectGame(selectedGame.id);
+    }, [bettingState, selectedGame, selectGame]);
 
     const handleSelectHistory = useCallback((title: string) => {
         const game = games.find((g) => `${g.away_team} @ ${g.home_team}` === title);
@@ -459,6 +475,7 @@ export default function Home() {
                 {selectedGame ? (
                     <AnalysisView
                         game={selectedGame}
+                        sport={currentSport}
                         injuries={injuries}
                         analysis={analysis}
                         analysisError={analysisError}
