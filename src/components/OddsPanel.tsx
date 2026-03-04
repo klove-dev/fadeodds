@@ -1,6 +1,6 @@
 'use client';
 
-import { Game } from '@/types';
+import { Game, type Sport } from '@/types';
 import { fmt, shortTeam, formatOddsTimestamp } from '@/lib/utils';
 import { getBetUrl, isBookAvailable, rewriteLinkForState, getBookLogoUrl } from '@/lib/sportsbooks';
 import { type TeamDef, teamLogoUrl, teamMatchesGame } from '@/lib/teams';
@@ -13,6 +13,16 @@ interface OddsPanelProps {
     showOddsTimestamp: boolean;
     allTeams: TeamDef[];
     onSaveBet: (bookKey: string, bookTitle: string) => void;
+}
+
+function sportFromTitle(sportTitle: string): Sport | null {
+    const t = sportTitle.toLowerCase();
+    if (t.includes('ncaab') || t.includes('college basketball')) return 'basketball_ncaab';
+    if (t.includes('nba') || t.includes('basketball')) return 'basketball_nba';
+    if (t.includes('nfl') || t.includes('football')) return 'americanfootball_nfl';
+    if (t.includes('nhl') || t.includes('hockey')) return 'icehockey_nhl';
+    if (t.includes('mlb') || t.includes('baseball')) return 'baseball_mlb';
+    return null;
 }
 
 function TeamLogoCell({ teamName, allTeams }: { teamName: string; allTeams: TeamDef[] }) {
@@ -35,6 +45,9 @@ function TeamLogoCell({ teamName, allTeams }: { teamName: string; allTeams: Team
 }
 
 export default function OddsPanel({ game, savedBetIds, bettingState, oddsTimestamp, showOddsTimestamp, allTeams, onSaveBet }: OddsPanelProps) {
+    const gameSport = sportFromTitle(game.sport_title);
+    const sportTeams = gameSport ? allTeams.filter((t) => t.sport === gameSport) : allTeams;
+
     const allBooks = (game.bookmakers || []).filter((b) => isBookAvailable(b.key, bettingState));
 
     if (!allBooks.length) {
@@ -152,7 +165,7 @@ export default function OddsPanel({ game, savedBetIds, bettingState, oddsTimesta
                         {/* Row 2 — Home ML */}
                         <tr>
                             <td className="odds-matrix-row-label">
-                                <TeamLogoCell teamName={game.home_team} allTeams={allTeams} />
+                                <TeamLogoCell teamName={game.home_team} allTeams={sportTeams} />
                             </td>
                             {bookData.map(({ book, homeML }) => {
                                 const best = homeML != null && homeML === bestHomeML;
@@ -167,7 +180,7 @@ export default function OddsPanel({ game, savedBetIds, bettingState, oddsTimesta
                         {/* Row 3 — Away ML */}
                         <tr>
                             <td className="odds-matrix-row-label">
-                                <TeamLogoCell teamName={game.away_team} allTeams={allTeams} />
+                                <TeamLogoCell teamName={game.away_team} allTeams={sportTeams} />
                             </td>
                             {bookData.map(({ book, awayML }) => {
                                 const best = awayML != null && awayML === bestAwayML;
