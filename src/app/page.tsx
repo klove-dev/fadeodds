@@ -307,8 +307,8 @@ export default function Home() {
             const awayLast = game.away_team.trim().split(' ').pop()?.toLowerCase() || '';
             const homeLast = game.home_team.trim().split(' ').pop()?.toLowerCase() || '';
             return all.filter((inj) => {
-                const t = inj.team.toLowerCase();
-                return t.includes(awayLast) || t.includes(homeLast);
+                const injLast = inj.team.trim().split(' ').pop()?.toLowerCase() || '';
+                return injLast === awayLast || injLast === homeLast;
             });
         } catch {
             return [];

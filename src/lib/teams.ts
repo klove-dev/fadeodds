@@ -21,7 +21,14 @@ export function teamMatchesGame(team: TeamDef, gameTeamName: string): boolean {
     const g = gameTeamName.toLowerCase().trim();
     const name = team.name.toLowerCase();
     const city = team.city.toLowerCase();
-    return g === name || g === city || g.startsWith(city + ' ') || name.startsWith(g + ' ') || g.includes(city);
+    const mascot = team.mascot.toLowerCase();
+    // Exact full name match
+    if (g === name) return true;
+    // Mascot-based match — prevents "Los Angeles" matching both Lakers and Clippers
+    if (g.includes(mascot)) return true;
+    // City-only strings (e.g. short display names)
+    if (g === city) return true;
+    return false;
 }
 
 // Common nicknames, slang, and misspellings keyed by "LEAGUE:espnAbbr"
