@@ -162,6 +162,7 @@ export default function AnalysisView({
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
     const chatWindowRef = useRef<HTMLDivElement>(null);
+    const lastPlayerRef = useRef<string | null>(null);
 
     useEffect(() => {
         const el = chatWindowRef.current;
@@ -182,11 +183,58 @@ export default function AnalysisView({
 
         try {
             // On-demand player splits: extract player name from query and fetch splits
+            const PLAYER_ALIASES: Record<string, string> = {
+                'lebron': 'LeBron James', 'lbj': 'LeBron James',
+                'steph': 'Stephen Curry', 'curry': 'Stephen Curry',
+                'kd': 'Kevin Durant', 'durant': 'Kevin Durant',
+                'kyrie': 'Kyrie Irving', 'tatum': 'Jayson Tatum',
+                'giannis': 'Giannis Antetokounmpo',
+                'ant': 'Anthony Edwards', 'embiid': 'Joel Embiid',
+                'jokic': 'Nikola Jokic', 'joker': 'Nikola Jokic',
+                'wemby': 'Victor Wembanyama', 'wembanyama': 'Victor Wembanyama',
+                'sga': 'Shai Gilgeous-Alexander', 'shai': 'Shai Gilgeous-Alexander',
+                'lamelo': 'LaMelo Ball', 'luka': 'Luka Doncic', 'doncic': 'Luka Doncic',
+                'brunson': 'Jalen Brunson', 'dame': 'Damian Lillard', 'lillard': 'Damian Lillard',
+                'sabonis': 'Domantas Sabonis', 'lauri': 'Lauri Markkanen',
+                // NFL
+                'mahomes': 'Patrick Mahomes', 'lamar': 'Lamar Jackson', 'hurts': 'Jalen Hurts',
+                'burrow': 'Joe Burrow', 'purdy': 'Brock Purdy', 'allen': 'Josh Allen',
+                'cmc': 'Christian McCaffrey', 'kelce': 'Travis Kelce', 'diggs': 'Stefon Diggs',
+                'tyreek': 'Tyreek Hill', 'hill': 'Tyreek Hill', 'davante': 'Davante Adams',
+                // NHL
+                'mcdavid': 'Connor McDavid', 'ovechkin': 'Alex Ovechkin', 'ovi': 'Alex Ovechkin',
+                'draisaitl': 'Leon Draisaitl', 'matthews': 'Auston Matthews',
+                'mackinnon': 'Nathan MacKinnon', 'hedman': 'Victor Hedman',
+                'crosby': 'Sidney Crosby', 'sid': 'Sidney Crosby',
+                // MLB
+                'ohtani': 'Shohei Ohtani', 'trout': 'Mike Trout', 'betts': 'Mookie Betts',
+                'judge': 'Aaron Judge', 'acuna': 'Ronald Acuna Jr.', 'devers': 'Rafael Devers',
+                'soto': 'Juan Soto', 'vlad': 'Vladimir Guerrero Jr.',
+                // NCAAB
+                'reed': 'Cooper Flagg', 'flagg': 'Cooper Flagg',
+                'boozer': 'Cameron Boozer', 'bynum': 'Tre Johnson',
+            };
+
             let playerSplits = null;
-            const nameMatch = text.match(/\b([A-Z][a-zA-Z']+(?:\s+[A-Z][a-zA-Z']+)+)\b/);
-            if (nameMatch) {
+            // 1. Try capitalized name match ("LeBron James", "Anthony Davis", "LeBron")
+            const nameMatch = text.match(/\b([A-Z][a-z]*[A-Z][a-zA-Z']*(?:\s+[A-Z][a-zA-Z']+)?|[A-Z][a-zA-Z']+\s+[A-Z][a-zA-Z']+)\b/);
+            let queryName: string | null = nameMatch?.[1] ?? null;
+            // 2. Fallback: scan words for alias/nickname ("lebron", "steph", "kd")
+            if (!queryName) {
+                const words = text.toLowerCase().split(/\W+/);
+                for (const word of words) {
+                    if (PLAYER_ALIASES[word]) { queryName = PLAYER_ALIASES[word]; break; }
+                }
+            }
+            // 3. Pronoun fallback: reuse last mentioned player
+            if (!queryName && /\b(he|him|his|she|her|they|them)\b/i.test(text)) {
+                queryName = lastPlayerRef.current;
+            }
+            if (queryName) lastPlayerRef.current = queryName;
+
+            if (queryName) {
                 try {
-                    const splitsRes = await fetch(`/api/player-splits?name=${encodeURIComponent(nameMatch[1])}&sport=${sport}`);
+                    const splitsRes = await fetch(`/api/player-splits?name=${encodeURIComponent(queryName)}&sport=${sport}`);
                     if (splitsRes.ok) {
                         const splitsData = await splitsRes.json();
                         playerSplits = splitsData.splits || null;
