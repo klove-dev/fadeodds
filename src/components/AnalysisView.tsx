@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Game, Injury, Analysis, SavedBet, Sport } from '@/types';
-import { formatTime, fmt, shortName } from '@/lib/utils';
+import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
+import { formatTime, fmt } from '@/lib/utils';
 import { type TeamDef } from '@/lib/teams';
-import OddsPanel from './OddsPanel';
+import OddsPanel, { type MarketKey } from './OddsPanel';
 import { isBookAvailable } from '@/lib/sportsbooks';
 
 interface AnalysisViewProps {
     game: Game;
+    score?: Score;
     sport: Sport;
     injuries: Injury[];
     analysis: Analysis | null;
@@ -20,7 +21,7 @@ interface AnalysisViewProps {
     showOddsTimestamp: boolean;
     allTeams: TeamDef[];
     onBack: () => void;
-    onSaveBet: (favId: string, bookTitle: string) => void;
+    onSaveBet: (marketKey: MarketKey, bestBookTitle: string) => void;
 }
 
 function InjuryPanel({ injuries }: { injuries: Injury[] }) {
@@ -129,13 +130,13 @@ function TeamRecords({ game }: { game: Game }) {
     return (
         <div className="team-records-inline">
             <div className="tri-record">
-                <span className="tri-team">{shortName(game.home_team)}</span>
+                <span className="tri-team">{game.home_team}</span>
                 <span className="tri-val">{records.home ?? '—'}</span>
                 <span className="tri-label">Home</span>
             </div>
             <div className="tri-vs">vs</div>
             <div className="tri-record">
-                <span className="tri-team">{shortName(game.away_team)}</span>
+                <span className="tri-team">{game.away_team}</span>
                 <span className="tri-val">{records.away ?? '—'}</span>
                 <span className="tri-label">Away</span>
             </div>
@@ -145,6 +146,7 @@ function TeamRecords({ game }: { game: Game }) {
 
 export default function AnalysisView({
     game,
+    score,
     sport,
     injuries,
     analysis,
@@ -289,7 +291,6 @@ export default function AnalysisView({
                     <div className="game-header-teams">{title}</div>
                     <div className="game-header-meta">{meta}</div>
                 </div>
-                <TeamRecords game={game} />
             </div>
 
             {/* Odds Matrix — full width */}
@@ -302,6 +303,7 @@ export default function AnalysisView({
                 </div>
                 <OddsPanel
                     game={game}
+                    score={score}
                     savedBetIds={savedBetIds}
                     bettingState={bettingState}
                     oddsTimestamp={oddsTimestamp}

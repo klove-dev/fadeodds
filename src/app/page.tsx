@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
 import { teamMatchesGame, type TeamDef } from '@/lib/teams';
 import { isBookAvailable } from '@/lib/sportsbooks';
+import { makeScoreKey } from '@/lib/utils';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import GamesGrid from '@/components/GamesGrid';
 import AnalysisView from '@/components/AnalysisView';
 import MyTeamsWizard from '@/components/MyTeamsWizard';
+import AskBar from '@/components/AskBar';
 import { useUser } from '@clerk/nextjs';
 
 const LS_KEY = 'fadeodds_my_teams';
@@ -376,6 +378,93 @@ export default function Home() {
         }
     }, [games, getGameInjuries]);
 
+    // Select a game directly from an object (used by AskBar cross-sport navigation)
+    const selectGameObject = useCallback(async (game: Game, sportKey: Sport) => {
+        setCurrentSport(sportKey);
+
+        const title = `${game.away_team} @ ${game.home_team}`;
+        setSessionHistory((prev) => {
+            const filtered = prev.filter((h) => h.title !== title);
+            return [{ title, sport: game.sport_title }, ...filtered];
+        });
+
+        setSelectedGame(game);
+        setAnalysis(null);
+        setAnalysisError(null);
+        setAnalysisLoading(true);
+
+        let gameInjuries: Injury[] = [];
+        try {
+            const res = await fetch(`/api/injuries?sport=${sportKey}`);
+            if (res.ok) {
+                const data = await res.json();
+                const all: Injury[] = data.injuries || [];
+                const awayLast = game.away_team.trim().split(' ').pop()?.toLowerCase() || '';
+                const homeLast = game.home_team.trim().split(' ').pop()?.toLowerCase() || '';
+                gameInjuries = all.filter((inj) => {
+                    const injLast = inj.team.trim().split(' ').pop()?.toLowerCase() || '';
+                    return injLast === awayLast || injLast === homeLast;
+                });
+            }
+        } catch { /* ignore */ }
+        setInjuries(gameInjuries);
+
+        try {
+            const res = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    game: {
+                        away_team: game.away_team,
+                        home_team: game.home_team,
+                        sport_title: game.sport_title,
+                        commence_time: game.commence_time,
+                    },
+                    oddsData: game.bookmakers.filter((b) => isBookAvailable(b.key, bettingStateRef.current)),
+                    injuryData: gameInjuries,
+                    gameId: game.id,
+                    bettingState: bettingStateRef.current,
+                    mode: 'initial',
+                }),
+            });
+
+            if (res.status === 401) { setAnalysisError('upgrade'); setAnalysisLoading(false); return; }
+            if (res.status === 403) {
+                const data = await res.json();
+                setAnalysisError(data.code === 'LIMIT_REACHED' ? 'limit' : 'upgrade');
+                setAnalysisLoading(false);
+                return;
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data: Analysis = await res.json();
+            setAnalysis(data);
+        } catch (err) {
+            console.error('Analysis failed:', err);
+            setAnalysisError('error');
+        } finally {
+            setAnalysisLoading(false);
+        }
+    }, []);
+
+    const handleAskGameSelect = useCallback(async (gameId: string, sportKey: string) => {
+        // Try current games first (no extra fetch needed)
+        let game = games.find((g) => g.id === gameId);
+
+        if (!game) {
+            // Fetch the right sport's games (hits Supabase cache, fast)
+            try {
+                const res = await fetch(`/api/odds?sport=${sportKey}`);
+                if (res.ok) {
+                    const sportGames: Game[] = await res.json();
+                    game = sportGames.find((g) => g.id === gameId);
+                    if (game) setGames(sportGames);
+                }
+            } catch { /* ignore */ }
+        }
+
+        if (game) selectGameObject(game, sportKey as Sport);
+    }, [games, selectGameObject]);
+
     // Re-run analysis when betting state changes while viewing a game
     const prevBettingStateRef = useRef<string | null | undefined>(undefined);
     useEffect(() => {
@@ -393,9 +482,10 @@ export default function Home() {
         if (game) selectGame(game.id);
     }, [games, selectGame]);
 
-    const handleSaveBet = useCallback(async (favId: string, bookTitle: string) => {
+    const handleSaveBet = useCallback(async (marketKey: string, bestBookTitle: string) => {
         if (!selectedGame) return;
 
+        const favId = `${selectedGame.id}-${marketKey}`;
         const exists = savedBets.findIndex((b) => b.id === favId);
 
         if (exists >= 0) {
@@ -405,12 +495,12 @@ export default function Home() {
             const newBet: SavedBet = {
                 id: favId,
                 type: 'line',
-                bookName: bookTitle,
+                bookName: bestBookTitle,
                 awayTeam: selectedGame.away_team,
                 homeTeam: selectedGame.home_team,
                 sport: selectedGame.sport_title,
                 commenceTime: selectedGame.commence_time,
-                pick: bookTitle,
+                pick: marketKey,
                 savedAt: Date.now(),
             };
             setSavedBets((prev) => [newBet, ...prev]);
@@ -419,12 +509,12 @@ export default function Home() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: favId,
-                    bookName: bookTitle,
+                    bookName: bestBookTitle,
                     awayTeam: selectedGame.away_team,
                     homeTeam: selectedGame.home_team,
                     sport: selectedGame.sport_title,
                     commenceTime: selectedGame.commence_time,
-                    pick: bookTitle,
+                    pick: marketKey,
                 }),
             }).catch(console.error);
         }
@@ -475,6 +565,7 @@ export default function Home() {
                 {selectedGame ? (
                     <AnalysisView
                         game={selectedGame}
+                        score={scores.find((s) => s.awayTeam === selectedGame.away_team && s.homeTeam === selectedGame.home_team) ?? scores.find((s) => makeScoreKey(s.awayTeam, s.homeTeam) === makeScoreKey(selectedGame.away_team, selectedGame.home_team))}
                         sport={currentSport}
                         injuries={injuries}
                         analysis={analysis}
@@ -495,6 +586,7 @@ export default function Home() {
                             alt="FadeOdds"
                             style={{ display: 'block', margin: '90px auto 0', height: '60px', width: 'auto' }}
                         />
+                        <AskBar onSelectGame={handleAskGameSelect} />
                         <GamesGrid
                             games={games}
                             scores={scores}
@@ -505,6 +597,7 @@ export default function Home() {
                             myTeamsActive={myTeamsActive}
                             myTeamsPureMode={myTeamsPureMode}
                             myTeams={myTeams}
+                            allTeams={allTeams}
                             onMyTeamsToggle={handleMyTeamsToggle}
                             onEditMyTeams={() => setShowWizard(true)}
                             oddsTimestamp={oddsTimestamp}
