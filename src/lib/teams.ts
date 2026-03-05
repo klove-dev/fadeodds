@@ -1,4 +1,10 @@
 import type { Sport } from '@/types';
+import ncaabLogos from './ncaab-logos.json';
+
+// Build a lowercase-keyed lookup for case-insensitive matching
+const ncaabLogoMap: Record<string, string> = Object.fromEntries(
+    Object.entries(ncaabLogos).map(([k, v]) => [k.toLowerCase(), v])
+);
 
 export interface TeamDef {
     id: string;
@@ -12,7 +18,7 @@ export interface TeamDef {
 
 export function teamLogoUrl(team: TeamDef): string {
     if (team.league === 'NCAAB') {
-        return `https://a.espncdn.com/i/teamlogos/ncaa/500/${team.espnAbbr}.png`;
+        return ncaabLogoMap[team.name.toLowerCase()] ?? '';
     }
     return `https://a.espncdn.com/i/teamlogos/${team.league.toLowerCase()}/500/${team.espnAbbr}.png`;
 }
