@@ -68,9 +68,11 @@ export default function Home() {
     const [myTeamsPureMode, setMyTeamsPureMode] = useState(false);
     const [leagues, setLeagues] = useState<string[]>([]);
 
-    // Keep myTeamsRef in sync so loadGames can read latest teams without a dep on myTeams
+    // Keep refs in sync so callbacks can read latest state without stale closures
     useEffect(() => { myTeamsRef.current = myTeams; }, [myTeams]);
     useEffect(() => { bettingStateRef.current = bettingState; }, [bettingState]);
+    const gamesRef = useRef<Game[]>([]);
+    useEffect(() => { gamesRef.current = games; }, [games]);
 
     useEffect(() => {
         if (!isSignedIn || !user) return;
@@ -447,23 +449,25 @@ export default function Home() {
     }, []);
 
     const handleAskGameSelect = useCallback(async (gameId: string, sportKey: string) => {
-        // Try current games first (no extra fetch needed)
-        let game = games.find((g) => g.id === gameId);
+        // Use ref so we always read the latest games without a stale closure
+        const trimmedId = gameId.trim();
+        let game = gamesRef.current.find((g) => g.id === trimmedId);
 
         if (!game) {
-            // Fetch the right sport's games (hits Supabase cache, fast)
+            // Game is from a different sport — fetch fresh (hits Supabase cache)
             try {
                 const res = await fetch(`/api/odds?sport=${sportKey}`);
                 if (res.ok) {
                     const sportGames: Game[] = await res.json();
-                    game = sportGames.find((g) => g.id === gameId);
-                    if (game) setGames(sportGames);
+                    game = sportGames.find((g) => g.id === trimmedId);
+                    // Note: do NOT call setGames here — that would replace the currently
+                    // displayed sport's games list with a foreign sport's data.
                 }
             } catch { /* ignore */ }
         }
 
         if (game) selectGameObject(game, sportKey as Sport);
-    }, [games, selectGameObject]);
+    }, [selectGameObject]);
 
     // Re-run analysis when betting state changes while viewing a game
     const prevBettingStateRef = useRef<string | null | undefined>(undefined);
