@@ -2,7 +2,7 @@
 
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Game } from '@/types';
-import { shortName, formatTime } from '@/lib/utils';
+import { formatTime } from '@/lib/utils';
 
 interface HeaderProps {
     games: Game[];
@@ -16,7 +16,7 @@ export default function Header({ games, onMenuClick, onSelectGame }: HeaderProps
         const book = g.bookmakers?.[0];
         const spreads = book?.markets?.find((m) => m.key === 'spreads');
         const fav = spreads?.outcomes?.find((o) => o.point && o.point < 0);
-        const line = fav ? ` (${shortName(fav.name)} ${fav.point})` : '';
+        const line = fav ? ` (${fav.name} ${fav.point})` : '';
         return { id: g.id, label: `${g.away_team} @ ${g.home_team}${line} · ${formatTime(g.commence_time)}` };
     });
 

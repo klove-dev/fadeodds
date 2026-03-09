@@ -7,6 +7,12 @@ import { type TeamDef } from '@/lib/teams';
 import OddsPanel, { type MarketKey } from './OddsPanel';
 import { isBookAvailable } from '@/lib/sportsbooks';
 
+function renderMarkdown(text: string): string {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // bold first
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');               // then italic
+}
+
 interface AnalysisViewProps {
     game: Game;
     score?: Score;
@@ -341,7 +347,10 @@ export default function AnalysisView({
                             <div className="rec-box">
                                 <div>
                                     <div className="rec-label">Top Recommendation</div>
-                                    <div className="rec-val">{analysis.recommendation}</div>
+                                    <div
+                                        className="rec-val"
+                                        dangerouslySetInnerHTML={{ __html: renderMarkdown(analysis.recommendation) }}
+                                    />
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <div className="rec-label">Edge</div>
@@ -353,7 +362,10 @@ export default function AnalysisView({
                         )}
 
                         {analysis?.expertTake && (
-                            <div className="expert-take">{analysis.expertTake}</div>
+                            <div
+                                className="expert-take"
+                                dangerouslySetInnerHTML={{ __html: renderMarkdown(analysis.expertTake) }}
+                            />
                         )}
 
                         <InjuryPanel injuries={injuries} />
@@ -363,9 +375,15 @@ export default function AnalysisView({
                 {/* Chat */}
                 <div className="chat-window" ref={chatWindowRef}>
                     {chatMessages.map((msg, i) => (
-                        <div key={i} className={`msg ${msg.role === 'user' ? 'msg-user' : 'msg-ai'}`}>
-                            {msg.text}
-                        </div>
+                        msg.role === 'ai' ? (
+                            <div
+                                key={i}
+                                className="msg msg-ai"
+                                dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.text) }}
+                            />
+                        ) : (
+                            <div key={i} className="msg msg-user">{msg.text}</div>
+                        )
                     ))}
                     {chatLoading && (
                         <div className="msg msg-ai pulse">Thinking...</div>

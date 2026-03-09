@@ -3,12 +3,21 @@
 import { useState, useRef, type KeyboardEvent } from 'react';
 
 const SUGGESTIONS = [
-    'Best underdog tonight?',
-    'Best over/under value?',
-    'Biggest favorite tonight?',
-    'Safest spread bet?',
-    'Highest payout potential?',
+    'What team is the biggest underdog today?',
+    'What team has the highest implied win probability today?',
+    'What game has the closest odds today?',
+    'What game has the largest spread today?',
+    'What team has the best Moneyline price available right now?',
+    'What game has the highest total today?',
+    'What game has the lowest total today?',
+    'Which underdog has the best payout today?',
 ];
+
+function renderMarkdown(text: string): string {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // bold first
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');               // then italic
+}
 
 interface ParsedSegment {
     type: 'text' | 'game';
@@ -125,16 +134,19 @@ export default function AskBar({ onSelectGame }: AskBarProps) {
 
                 {/* Suggestion chips */}
                 {!loading && !response && (
-                    <div className="ask-suggestions">
-                        {SUGGESTIONS.map((s) => (
-                            <button
-                                key={s}
-                                className="ask-suggestion"
-                                onClick={() => handleSuggestion(s)}
-                            >
-                                {s}
-                            </button>
-                        ))}
+                    <div className="ask-suggestions-wrap">
+                        <div className="ask-suggestions-label">Try asking</div>
+                        <div className="ask-suggestions">
+                            {SUGGESTIONS.map((s) => (
+                                <button
+                                    key={s}
+                                    className="ask-suggestion"
+                                    onClick={() => handleSuggestion(s)}
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -165,7 +177,12 @@ export default function AskBar({ onSelectGame }: AskBarProps) {
                                         {seg.label}
                                     </button>
                                 ) : (
-                                    <span key={i}>{seg.content}</span>
+                                    <span
+                                        key={i}
+                                        dangerouslySetInnerHTML={{
+                                            __html: renderMarkdown(seg.content),
+                                        }}
+                                    />
                                 )
                             )}
                         </p>
