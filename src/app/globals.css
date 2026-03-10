@@ -238,10 +238,10 @@ body {
 .skeleton { background: var(--card); border: 1px solid var(--border); border-radius: 18px; height: 175px; animation: shimmer 1.5s infinite ease-in-out; }
 @keyframes shimmer { 0%,100% { opacity: 0.35; } 50% { opacity: 0.7; } }
 
-.analysis-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+.analysis-container { max-width: 1200px; margin: 0 auto 30px; padding: 20px 20px 0; }
 
 /* Breadcrumb nav at top of game page */
-.analysis-breadcrumb { margin-bottom: 18px; }
+.analysis-breadcrumb { margin-bottom: 6px; }
 .breadcrumb-back { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; padding: 4px 0; color: var(--dim); font-size: 0.72rem; font-weight: 700; }
 .breadcrumb-back:hover .breadcrumb-games { color: var(--cobalt); }
 .breadcrumb-logo { height: 22px; width: auto; display: block; opacity: 0.85; }

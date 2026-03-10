@@ -284,7 +284,6 @@ export default function AnalysisView({
             {/* Breadcrumb */}
             <div className="analysis-breadcrumb">
                 <button className="breadcrumb-back" onClick={onBack}>
-                    <img src="/logo.png" alt="FadeOdds" className="breadcrumb-logo" />
                     <span className="breadcrumb-sep">←</span>
                     <span className="breadcrumb-games">Games</span>
                     <span className="breadcrumb-sep">/</span>
@@ -292,12 +291,15 @@ export default function AnalysisView({
                 </button>
             </div>
 
-            {/* Game header */}
-            <div className="game-header">
+            {/* Game header + Logo */}
+            <div className="game-header" style={{ alignItems: 'flex-end' }}>
                 <div>
                     <div className="game-header-teams">{title}</div>
                     <div className="game-header-meta">{meta}</div>
                 </div>
+                <button onClick={onBack} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
+                    <img src="/logo.png" alt="FadeOdds" style={{ display: 'block', height: '100px', width: 'auto' }} />
+                </button>
             </div>
 
             {/* Odds Matrix — full width */}
