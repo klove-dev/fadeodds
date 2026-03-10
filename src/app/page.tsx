@@ -589,7 +589,7 @@ export default function Home() {
                         <img
                             src="/logo.png"
                             alt="FadeOdds"
-                            style={{ display: 'block', margin: '90px auto 0', height: '60px', width: 'auto' }}
+                            style={{ display: 'block', margin: '90px auto 0', height: '120px', width: 'auto' }}
                         />
                         <AskBar onSelectGame={handleAskGameSelect} />
                         <GamesGrid
