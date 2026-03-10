@@ -2,34 +2,15 @@
 
 import { Game, Score } from '@/types';
 import { fmt, formatTime } from '@/lib/utils';
-import { type TeamDef, teamMatchesGame, teamLogoUrl } from '@/lib/teams';
 
 interface GameCardProps {
     game: Game;
     score?: Score;
     onSelect: (gameId: string) => void;
     isMyTeam?: boolean;
-    allTeams?: TeamDef[];
 }
 
-function TeamLogo({ teamName, allTeams }: { teamName: string; allTeams: TeamDef[] }) {
-    const team = allTeams.find((t) => teamMatchesGame(t, teamName));
-    if (!team) return null;
-    const url = teamLogoUrl(team);
-    if (!url) return null;
-    return (
-        <img
-            src={url}
-            alt={teamName}
-            width={20}
-            height={20}
-            style={{ objectFit: 'contain', flexShrink: 0 }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-    );
-}
-
-export default function GameCard({ game, score, onSelect, isMyTeam, allTeams = [] }: GameCardProps) {
+export default function GameCard({ game, score, onSelect, isMyTeam }: GameCardProps) {
     const books = game.bookmakers || [];
 
     const findMarket = (key: string) => {
@@ -94,18 +75,12 @@ export default function GameCard({ game, score, onSelect, isMyTeam, allTeams = [
                     </div>
                     <div className="live-score-row">
                         <div className="live-score-team">
-                            <div className="live-score-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <TeamLogo teamName={game.away_team} allTeams={allTeams} />
-                                {game.away_team}
-                            </div>
+                            <div className="live-score-name">{game.away_team}</div>
                             <div className={`live-score-num ${awayWinning ? 'winning' : ''}`}>{score.awayScore}</div>
                         </div>
                         <div className="live-score-divider">-</div>
                         <div className="live-score-team">
-                            <div className="live-score-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <TeamLogo teamName={game.home_team} allTeams={allTeams} />
-                                {game.home_team}
-                            </div>
+                            <div className="live-score-name">{game.home_team}</div>
                             <div className={`live-score-num ${homeWinning ? 'winning' : ''}`}>{score.homeScore}</div>
                         </div>
                     </div>
@@ -117,18 +92,12 @@ export default function GameCard({ game, score, onSelect, isMyTeam, allTeams = [
                     </div>
                     <div className="live-score-row">
                         <div className="live-score-team">
-                            <div className="live-score-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <TeamLogo teamName={game.away_team} allTeams={allTeams} />
-                                {game.away_team}
-                            </div>
+                            <div className="live-score-name">{game.away_team}</div>
                             <div className={`live-score-num ${awayWinning ? 'winning' : ''}`}>{score.awayScore}</div>
                         </div>
                         <div className="live-score-divider">-</div>
                         <div className="live-score-team">
-                            <div className="live-score-name" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <TeamLogo teamName={game.home_team} allTeams={allTeams} />
-                                {game.home_team}
-                            </div>
+                            <div className="live-score-name">{game.home_team}</div>
                             <div className={`live-score-num ${homeWinning ? 'winning' : ''}`}>{score.homeScore}</div>
                         </div>
                     </div>
@@ -137,15 +106,9 @@ export default function GameCard({ game, score, onSelect, isMyTeam, allTeams = [
                 <>
                     <div className="game-time">{formatTime(game.commence_time)}</div>
                     <div className="matchup">
-                        <div className="team-name away" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <TeamLogo teamName={game.away_team} allTeams={allTeams} />
-                            {game.away_team}
-                        </div>
+                        <div className="team-name away">{game.away_team}</div>
                         <div className="vs-badge">@</div>
-                        <div className="team-name home" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <TeamLogo teamName={game.home_team} allTeams={allTeams} />
-                            {game.home_team}
-                        </div>
+                        <div className="team-name home">{game.home_team}</div>
                     </div>
                 </>
             )}

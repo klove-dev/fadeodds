@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { teamLogoUrl, searchTeam, type TeamDef } from '@/lib/teams';
+import { searchTeam, type TeamDef } from '@/lib/teams';
 
 interface MyTeamsWizardProps {
     allTeams: TeamDef[];
@@ -94,7 +94,6 @@ export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfi
                                 const isSelected = selected.has(team.id);
                                 return (
                                     <div key={team.id} className="wizard-team-row">
-                                        <TeamLogo team={team} />
                                         <div className="wizard-team-info">
                                             <div className="wizard-team-name">{team.name}</div>
                                             <span
@@ -131,28 +130,5 @@ export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfi
                 )}
             </div>
         </div>
-    );
-}
-
-function TeamLogo({ team }: { team: TeamDef }) {
-    const [errored, setErrored] = useState(false);
-
-    if (errored) {
-        return (
-            <div className="wizard-logo-fallback">
-                <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--dim)' }}>
-                    {team.league}
-                </span>
-            </div>
-        );
-    }
-
-    return (
-        <img
-            className="wizard-logo"
-            src={teamLogoUrl(team)}
-            alt={team.name}
-            onError={() => setErrored(true)}
-        />
     );
 }

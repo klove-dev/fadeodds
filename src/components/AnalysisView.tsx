@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
 import { formatTime, fmt } from '@/lib/utils';
-import { type TeamDef } from '@/lib/teams';
 import OddsPanel, { type MarketKey } from './OddsPanel';
 import { useSportsbookConfig } from '@/contexts/SportsbookContext';
 
@@ -25,7 +24,6 @@ interface AnalysisViewProps {
     bettingState: string | null;
     oddsTimestamp: string | null;
     showOddsTimestamp: boolean;
-    allTeams: TeamDef[];
     onBack: () => void;
     onSaveBet: (marketKey: MarketKey, bestBookTitle: string) => void;
 }
@@ -162,7 +160,6 @@ export default function AnalysisView({
     bettingState,
     oddsTimestamp,
     showOddsTimestamp,
-    allTeams,
     onBack,
     onSaveBet,
 }: AnalysisViewProps) {
@@ -317,7 +314,6 @@ export default function AnalysisView({
                     bettingState={bettingState}
                     oddsTimestamp={oddsTimestamp}
                     showOddsTimestamp={showOddsTimestamp}
-                    allTeams={allTeams}
                     onSaveBet={onSaveBet}
                 />
             </div>

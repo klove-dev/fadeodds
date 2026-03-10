@@ -5,7 +5,6 @@ import { Game, Score, type Sport } from '@/types';
 import { fmt, formatOddsTimestamp, formatTime } from '@/lib/utils';
 import { getBetUrl, rewriteLinkForState, getBookLogoUrl } from '@/lib/sportsbooks';
 import { useSportsbookConfig } from '@/contexts/SportsbookContext';
-import { type TeamDef, teamLogoUrl, teamMatchesGame } from '@/lib/teams';
 
 export type MarketKey = 'spreads' | 'h2h' | 'totals';
 
@@ -16,7 +15,6 @@ interface OddsPanelProps {
     bettingState: string | null;
     oddsTimestamp: string | null;
     showOddsTimestamp: boolean;
-    allTeams: TeamDef[];
     onSaveBet: (marketKey: MarketKey, bestBookTitle: string) => void;
 }
 
@@ -117,7 +115,6 @@ export default function OddsPanel({
     bettingState,
     oddsTimestamp,
     showOddsTimestamp,
-    allTeams,
     onSaveBet,
 }: OddsPanelProps) {
     const { isBookAvailable } = useSportsbookConfig();
@@ -125,7 +122,6 @@ export default function OddsPanel({
     const [showDetails, setShowDetails] = useState(false);
 
     const gameSport = sportKeyFromTitle(game.sport_title);
-    const sportTeams = allTeams.filter((t) => t.sport === gameSport);
 
     useEffect(() => {
         const params = new URLSearchParams({ sport: gameSport, away: game.away_team, home: game.home_team });
@@ -141,19 +137,6 @@ export default function OddsPanel({
     const homeScoreNum = hasScore ? Number(score!.homeScore) : null;
     const awayLeading = awayScoreNum !== null && homeScoreNum !== null && awayScoreNum > homeScoreNum;
     const homeLeading = awayScoreNum !== null && homeScoreNum !== null && homeScoreNum > awayScoreNum;
-
-    const getTeamLogo = (name: string, size = 28) => {
-        const team = sportTeams.find((t) => teamMatchesGame(t, name));
-        if (!team) return null;
-        const url = teamLogoUrl(team);
-        if (!url) return null;
-        return (
-            <img src={url} alt={name} width={size} height={size}
-                style={{ objectFit: 'contain', flexShrink: 0 }}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-        );
-    };
 
     const books = game.bookmakers || [];
     const availableBooks = books.filter((b) => isBookAvailable(b.key, bettingState));
@@ -257,7 +240,6 @@ export default function OddsPanel({
         <tr>
             <td className="odds-matrix-row-label" style={{ minWidth: '180px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {getTeamLogo(name)}
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.2 }}>{name}</div>
                         {record && <div style={{ fontSize: '0.65rem', color: 'var(--dim)', marginTop: '2px' }}>{record}</div>}

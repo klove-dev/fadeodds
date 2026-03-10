@@ -580,7 +580,6 @@ export default function Home() {
                         bettingState={bettingState}
                         oddsTimestamp={oddsTimestamp}
                         showOddsTimestamp={showOddsTimestamp}
-                        allTeams={allTeams}
                         onBack={() => setSelectedGame(null)}
                         onSaveBet={handleSaveBet}
                     />
@@ -602,7 +601,6 @@ export default function Home() {
                             myTeamsActive={myTeamsActive}
                             myTeamsPureMode={myTeamsPureMode}
                             myTeams={myTeams}
-                            allTeams={allTeams}
                             onMyTeamsToggle={handleMyTeamsToggle}
                             onEditMyTeams={() => setShowWizard(true)}
                             oddsTimestamp={oddsTimestamp}

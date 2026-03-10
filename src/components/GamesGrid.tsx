@@ -2,8 +2,7 @@
 
 import { Game, Score, Sport } from '@/types';
 import { makeScoreKey, formatOddsTimestamp } from '@/lib/utils';
-import type { TeamDef } from '@/lib/teams';
-import { teamMatchesGame } from '@/lib/teams';
+import { teamMatchesGame, type TeamDef } from '@/lib/teams';
 
 import GameCard from './GameCard';
 
@@ -25,7 +24,6 @@ interface GamesGridProps {
     myTeamsActive: boolean;
     myTeamsPureMode: boolean;
     myTeams: TeamDef[];
-    allTeams: TeamDef[];
     onMyTeamsToggle: () => void;
     onEditMyTeams: () => void;
     oddsTimestamp: string | null;
@@ -42,7 +40,6 @@ export default function GamesGrid({
     myTeamsActive,
     myTeamsPureMode,
     myTeams,
-    allTeams,
     onMyTeamsToggle,
     onEditMyTeams,
     oddsTimestamp,
@@ -130,7 +127,6 @@ export default function GamesGrid({
                                     score={getScore(game)}
                                     onSelect={onSelectGame}
                                     isMyTeam={isMyTeam}
-                                    allTeams={allTeams}
                                 />
                             );
                         })}
