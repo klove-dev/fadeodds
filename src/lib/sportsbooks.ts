@@ -125,7 +125,6 @@ const BOOK_LOGO_DOMAINS: Record<string, string> = {
     draftkings:         'draftkings.com',
     betmgm:             'betmgm.com',
     bet365_us:          'bet365.com',
-    williamhill_us:     'caesars.com',
     fanatics:           'fanatics.com',
     espnbet:            'espnbet.com',
     betrivers:          'betrivers.com',

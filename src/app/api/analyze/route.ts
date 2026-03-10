@@ -105,37 +105,37 @@ export async function POST(request: Request) {
 
     if (mode === 'chat') {
         systemPrompt = `You are a sharp sports betting analyst for FadeOdds.
-Today is ${today}. Game: ${game.away_team} @ ${game.home_team} (${game.sport_title}) at ${new Date(game.commence_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })} ET.
-Real odds data from sportsbooks: ${JSON.stringify(oddsData)}.${injuryContext}${splitsContext}
-IMPORTANT: The injury report only lists players with active injury designations. If a player is NOT on the list, they are healthy and expected to play. Answer follow-up questions concisely and sharply. Keep answers under 3 sentences. Do not use markdown formatting — no bold, no asterisks, no bullet points. Plain text only.`;
-        userMessage = userQuery;
-    } else {
-        systemPrompt = `You are a sharp sports betting AI analyst for FadeOdds. You analyze games for expert bettors.
-You will receive a game, real sportsbook odds data, and an injury report.
-CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no extra text. Use this exact format:
-{
-  "tiles": [
-    {"label": "string", "val": "string"},
-    {"label": "string", "val": "string"},
-    {"label": "string", "val": "string"},
-    {"label": "string", "val": "string"}
-  ],
-  "blurb": "string (1 sentence: describe the betting storyline or market context for this game — e.g. sharp money on the home spread, public fading the away team, or line movement signal)",
-  "expertTake": "string (2 sharp sentences on the market edge and where the value is)",
-  "recommendation": "string (e.g. 'Lakers -3.5' or 'OVER 224.5' or 'PHI Moneyline')",
-  "confidence": number (integer 55-92),
-  "edge": "string (e.g. 'Line value on home spread' or 'Public overreacting to last game')"
-}
-For the tiles, use sharp betting metrics like: implied probability, best ML value, spread consensus, line movement signal, public bet %, sharp money indicator, key injury impact, or home/away ATS record.`;
+        Today is ${today}. Game: ${game.away_team} @ ${game.home_team} (${game.sport_title}) at ${new Date(game.commence_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })} ET.
+        Real odds data from sportsbooks: ${JSON.stringify(oddsData)}.${injuryContext}${splitsContext}
+        IMPORTANT: The injury report only lists players with active injury designations. If a player is NOT on the list, they are healthy and expected to play. Answer follow-up questions concisely and sharply. Keep answers under 3 sentences. Do not use markdown formatting — no bold, no asterisks, no bullet points. Plain text only.`;
+                userMessage = userQuery;
+            } else {
+                systemPrompt = `You are a sharp sports betting AI analyst for FadeOdds. You analyze games for expert bettors.
+        You will receive a game, real sportsbook odds data, and an injury report.
+        CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no extra text. Use this exact format:
+        {
+        "tiles": [
+            {"label": "string", "val": "string"},
+            {"label": "string", "val": "string"},
+            {"label": "string", "val": "string"},
+            {"label": "string", "val": "string"}
+        ],
+        "blurb": "string (1 sentence: describe the betting storyline or market context for this game — e.g. sharp money on the home spread, public fading the away team, or line movement signal)",
+        "expertTake": "string (2 sharp sentences on the market edge and where the value is)",
+        "recommendation": "string (e.g. 'Lakers -3.5' or 'OVER 224.5' or 'PHI Moneyline')",
+        "confidence": number (integer 55-92),
+        "edge": "string (e.g. 'Line value on home spread' or 'Public overreacting to last game')"
+        }
+        For the tiles, use sharp betting metrics like: implied probability, best ML value, spread consensus, line movement signal, public bet %, sharp money indicator, key injury impact, or home/away ATS record.`;
 
-        userMessage = `Analyze this game for sharp bettors:
-Game: ${game.away_team} @ ${game.home_team}
-Sport: ${game.sport_title}
-Time: ${game.commence_time}
-Real Sportsbook Odds: ${JSON.stringify(oddsData)}
-${injuryContext}
+                userMessage = `Analyze this game for sharp bettors:
+        Game: ${game.away_team} @ ${game.home_team}
+        Sport: ${game.sport_title}
+        Time: ${game.commence_time}
+        Real Sportsbook Odds: ${JSON.stringify(oddsData)}
+        ${injuryContext}
 
-Provide 4 sharp intelligence tiles, your expert take, and your top recommendation.`;
+        Provide 4 sharp intelligence tiles, your expert take, and your top recommendation.`;
     }
 
     try {
@@ -169,6 +169,7 @@ Provide 4 sharp intelligence tiles, your expert take, and your top recommendatio
 
         const data = await response.json();
         const text = data.content?.[0]?.text;
+        // console.log('Claude API raw response:', JSON.stringify(data, null, 2));
 
         if (!text) {
             return Response.json({ error: 'Empty response from Claude' }, { status: 500 });
