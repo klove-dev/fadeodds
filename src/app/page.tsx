@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
 import { teamMatchesGame, type TeamDef } from '@/lib/teams';
-import { isBookAvailable } from '@/lib/sportsbooks';
+import { useSportsbookConfig } from '@/contexts/SportsbookContext';
 import { makeScoreKey } from '@/lib/utils';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -36,6 +36,7 @@ function useTheme() {
 export default function Home() {
     const { user, isSignedIn } = useUser();
     const { theme, toggle: toggleTheme } = useTheme();
+    const { isBookAvailable } = useSportsbookConfig();
 
     const [currentSport, setCurrentSport] = useState<Sport>('basketball_nba');
     const [games, setGames]               = useState<Game[]>([]);

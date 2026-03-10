@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Game, Score, type Sport } from '@/types';
 import { fmt, formatOddsTimestamp, formatTime } from '@/lib/utils';
-import { getBetUrl, isBookAvailable, rewriteLinkForState, getBookLogoUrl } from '@/lib/sportsbooks';
+import { getBetUrl, rewriteLinkForState, getBookLogoUrl } from '@/lib/sportsbooks';
+import { useSportsbookConfig } from '@/contexts/SportsbookContext';
 import { type TeamDef, teamLogoUrl, teamMatchesGame } from '@/lib/teams';
 
 export type MarketKey = 'spreads' | 'h2h' | 'totals';
@@ -118,6 +119,7 @@ export default function OddsPanel({
     allTeams,
     onSaveBet,
 }: OddsPanelProps) {
+    const { isBookAvailable } = useSportsbookConfig();
     const [records, setRecords] = useState<{ away: string | null; home: string | null } | null>(null);
     const [showDetails, setShowDetails] = useState(false);
 

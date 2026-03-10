@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SavedBet } from '@/types';
 import { formatTime } from '@/lib/utils';
-import { LEGAL_BETTING_STATES } from '@/lib/sportsbooks';
+import { useSportsbookConfig } from '@/contexts/SportsbookContext';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -44,6 +44,7 @@ export default function Sidebar({
     onBettingStateChange,
     onToggleOddsTimestamp,
 }: SidebarProps) {
+    const { bettingStates } = useSportsbookConfig();
     const [activeTab, setActiveTab] = useState<'tracker' | 'history' | 'settings'>('tracker');
     const [betFilter, setBetFilter] = useState<'active' | 'archived'>('active');
 
@@ -179,7 +180,7 @@ export default function Sidebar({
                                     onChange={(e) => onBettingStateChange(e.target.value || null)}
                                 >
                                     <option value="">— Select your state —</option>
-                                    {LEGAL_BETTING_STATES.map((s) => (
+                                    {bettingStates.map((s) => (
                                         <option key={s.abbr} value={s.abbr}>{s.name} ({s.abbr})</option>
                                     ))}
                                 </select>

@@ -1,13 +1,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { getUserTier, getUsage, incrementUsage, syncUser } from '@/lib/user';
+import { getUserTier, getUsage, getTierLimits, incrementUsage, syncUser } from '@/lib/user';
 import { supabaseAdmin } from '@/lib/supabase';
 
-const TIER_LIMITS: Record<string, { games: number; questions: number }> = {
-    free:  { games: 0,        questions: 0 },
-    go:    { games: 3,        questions: 10 },
-    plus:  { games: 10,       questions: 100 },
-    pro:   { games: Infinity, questions: 5000 },
-};
 
 async function getCachedAnalysis(gameId: string, state: string): Promise<any | null> {
     const today = new Date().toISOString().slice(0, 10);
@@ -63,7 +57,7 @@ export async function POST(request: Request) {
 
     // Tier enforcement
     const tier = await getUserTier(userId);
-    const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
+    const limits = await getTierLimits(tier);
     const usage = await getUsage(userId);
 
     if (mode === 'initial') {

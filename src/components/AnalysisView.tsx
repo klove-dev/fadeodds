@@ -5,7 +5,7 @@ import { Game, Score, Injury, Analysis, SavedBet, Sport } from '@/types';
 import { formatTime, fmt } from '@/lib/utils';
 import { type TeamDef } from '@/lib/teams';
 import OddsPanel, { type MarketKey } from './OddsPanel';
-import { isBookAvailable } from '@/lib/sportsbooks';
+import { useSportsbookConfig } from '@/contexts/SportsbookContext';
 
 function renderMarkdown(text: string): string {
     return text
@@ -166,6 +166,7 @@ export default function AnalysisView({
     onBack,
     onSaveBet,
 }: AnalysisViewProps) {
+    const { isBookAvailable } = useSportsbookConfig();
     const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
     const [chatInput, setChatInput] = useState('');
     const [chatLoading, setChatLoading] = useState(false);

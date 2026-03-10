@@ -17,15 +17,21 @@ export async function GET(request: Request) {
         return Response.json(leagues);
     }
 
-    const { data, error } = await supabaseAdmin
-        .from('teams')
-        .select('*')
-        .order('league')
-        .order('name');
+    const [teamsResult, aliasesResult] = await Promise.all([
+        supabaseAdmin.from('teams').select('*').order('league').order('name'),
+        supabaseAdmin.from('team_aliases').select('league, espn_abbr, alias'),
+    ]);
 
-    if (error) return Response.json({ error: error.message }, { status: 500 });
+    if (teamsResult.error) return Response.json({ error: teamsResult.error.message }, { status: 500 });
 
-    const teams: TeamDef[] = data.map((row) => ({
+    const aliasMap: Record<string, string[]> = {};
+    for (const row of aliasesResult.data ?? []) {
+        const key = `${row.league}:${row.espn_abbr}`;
+        if (!aliasMap[key]) aliasMap[key] = [];
+        aliasMap[key].push(row.alias);
+    }
+
+    const teams: TeamDef[] = teamsResult.data.map((row) => ({
         id: row.id,
         name: row.name,
         city: row.city,
@@ -33,6 +39,7 @@ export async function GET(request: Request) {
         league: row.league,
         sport: row.sport,
         espnAbbr: row.espn_abbr,
+        aliases: aliasMap[`${row.league}:${row.espn_abbr}`] ?? [],
     }));
 
     return Response.json(teams);

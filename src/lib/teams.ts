@@ -14,6 +14,7 @@ export interface TeamDef {
     league: string;
     sport: Sport;
     espnAbbr: string;
+    aliases?: string[];
 }
 
 export function teamLogoUrl(team: TeamDef): string {
@@ -192,6 +193,6 @@ export function searchTeam(team: TeamDef, query: string): boolean {
     if (team.name.toLowerCase().includes(q)) return true;
     if (team.city.toLowerCase().includes(q)) return true;
     const key = `${team.league.toUpperCase()}:${team.espnAbbr.toUpperCase()}`;
-    const aliases = TEAM_ALIASES[key] ?? [];
+    const aliases = team.aliases ?? TEAM_ALIASES[key] ?? [];
     return aliases.some((alias) => alias.includes(q) || q.includes(alias));
 }

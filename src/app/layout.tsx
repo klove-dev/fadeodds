@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from '@clerk/nextjs';
+import { SportsbookProvider } from '@/contexts/SportsbookContext';
 import "./globals.css";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fadeodds.com';
@@ -40,7 +41,7 @@ export default function RootLayout({
                         }}
                     />
                 </head>
-                <body>{children}</body>
+                <body><SportsbookProvider>{children}</SportsbookProvider></body>
             </html>
         </ClerkProvider>
     );
