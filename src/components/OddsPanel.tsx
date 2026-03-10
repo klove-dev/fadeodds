@@ -31,6 +31,7 @@ function findBest(
     bettingState: string | null,
     marketKey: MarketKey,
     outcomeName: string,
+    isBookAvailable: (bookKey: string, state: string | null) => boolean,
 ): BestOdds | null {
     const candidates: Array<{
         bookKey: string; bookTitle: string; bookLink?: string;
@@ -165,12 +166,12 @@ export default function OddsPanel({
         );
     }
 
-    const bestAwaySpr = findBest(books, bettingState, 'spreads', game.away_team);
-    const bestHomeSpr = findBest(books, bettingState, 'spreads', game.home_team);
-    const bestAwayML  = findBest(books, bettingState, 'h2h',     game.away_team);
-    const bestHomeML  = findBest(books, bettingState, 'h2h',     game.home_team);
-    const bestOver    = findBest(books, bettingState, 'totals',  'Over');
-    const bestUnder   = findBest(books, bettingState, 'totals',  'Under');
+    const bestAwaySpr = findBest(books, bettingState, 'spreads', game.away_team, isBookAvailable);
+    const bestHomeSpr = findBest(books, bettingState, 'spreads', game.home_team, isBookAvailable);
+    const bestAwayML  = findBest(books, bettingState, 'h2h',     game.away_team, isBookAvailable);
+    const bestHomeML  = findBest(books, bettingState, 'h2h',     game.home_team, isBookAvailable);
+    const bestOver    = findBest(books, bettingState, 'totals',  'Over',         isBookAvailable);
+    const bestUnder   = findBest(books, bettingState, 'totals',  'Under',        isBookAvailable);
 
     const openLink = (best: BestOdds | null) => {
         if (!best) return;
