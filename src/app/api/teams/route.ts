@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
     const aliasMap: Record<string, string[]> = {};
     for (const row of aliasesResult.data ?? []) {
-        const key = `${row.league}:${row.espn_abbr}`;
+        const key = `${row.league.toUpperCase()}:${row.espn_abbr.toUpperCase()}`;
         if (!aliasMap[key]) aliasMap[key] = [];
         aliasMap[key].push(row.alias);
     }
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         league: row.league,
         sport: row.sport,
         espnAbbr: row.espn_abbr,
-        aliases: aliasMap[`${row.league}:${row.espn_abbr}`] ?? [],
+        aliases: aliasMap[`${row.league.toUpperCase()}:${row.espn_abbr.toUpperCase()}`] ?? [],
     }));
 
     return Response.json(teams);

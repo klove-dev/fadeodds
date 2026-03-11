@@ -8,7 +8,7 @@ import { useSportsbookConfig } from '@/contexts/SportsbookContext';
 interface SidebarProps {
     isOpen: boolean;
     savedBets: SavedBet[];
-    sessionHistory: { title: string; sport: string }[];
+    sessionHistory: { title: string; sport: string; type?: 'analysis' | 'question' }[];
     oddsCredits: string | null;
     theme: 'light' | 'dark';
     bettingState: string | null;
@@ -145,7 +145,7 @@ export default function Sidebar({
                                     >
                                         <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>{h.title}</div>
                                         <div style={{ fontSize: '0.56rem', color: 'var(--dim)', marginTop: '4px', textTransform: 'uppercase' }}>
-                                            {h.sport} · Analyzed
+                                            {h.sport} · {h.type === 'question' ? 'Asked' : 'Analyzed'}
                                         </div>
                                     </div>
                                 ))

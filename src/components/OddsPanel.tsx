@@ -54,9 +54,21 @@ function findBest(
     if (!candidates.length) return null;
 
     // Spreads: best = highest point (most favorable for bettor), then highest price if tied
-    // ML / totals: best = highest price
+    // Totals Over: lowest point first (easiest to go over), then highest price if tied
+    // Totals Under: highest point first (most cushion), then highest price if tied
+    // ML: highest price
     let best: typeof candidates;
     if (marketKey === 'spreads') {
+        const maxPoint = Math.max(...candidates.map((c) => c.point ?? -Infinity));
+        const atMax = candidates.filter((c) => c.point === maxPoint);
+        const maxPrice = Math.max(...atMax.map((c) => c.price));
+        best = atMax.filter((c) => c.price === maxPrice);
+    } else if (marketKey === 'totals' && outcomeName === 'Over') {
+        const minPoint = Math.min(...candidates.map((c) => c.point ?? Infinity));
+        const atMin = candidates.filter((c) => c.point === minPoint);
+        const maxPrice = Math.max(...atMin.map((c) => c.price));
+        best = atMin.filter((c) => c.price === maxPrice);
+    } else if (marketKey === 'totals' && outcomeName === 'Under') {
         const maxPoint = Math.max(...candidates.map((c) => c.point ?? -Infinity));
         const atMax = candidates.filter((c) => c.point === maxPoint);
         const maxPrice = Math.max(...atMax.map((c) => c.price));

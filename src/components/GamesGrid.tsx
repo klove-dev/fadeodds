@@ -10,6 +10,7 @@ const SPORTS: { key: Sport; label: string }[] = [
     { key: 'basketball_nba', label: 'NBA' },
     { key: 'basketball_ncaab', label: 'NCAAB' },
     { key: 'americanfootball_nfl', label: 'NFL' },
+    { key: 'americanfootball_ncaaf', label: 'NCAAF' },
     { key: 'icehockey_nhl', label: 'NHL' },
     { key: 'baseball_mlb', label: 'MLB' },
 ];

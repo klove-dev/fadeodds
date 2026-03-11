@@ -76,6 +76,7 @@ export type Sport =
     | 'basketball_nba'
     | 'basketball_ncaab'
     | 'americanfootball_nfl'
+    | 'americanfootball_ncaaf'
     | 'icehockey_nhl'
     | 'baseball_mlb';
 
