@@ -49,7 +49,7 @@ export default function Home() {
     const [analysisError, setAnalysisError] = useState<'upgrade' | 'limit' | 'error' | null>(null);
     const [sidebarOpen, setSidebarOpen]   = useState(false);
     const [savedBets, setSavedBets]       = useState<SavedBet[]>([]);
-    const [sessionHistory, setSessionHistory] = useState<{ title: string; sport: string }[]>([]);
+    const [sessionHistory, setSessionHistory] = useState<{ title: string; sport: string; type?: 'analysis' | 'question'; gameId?: string; sportKey?: string }[]>([]);
     const [oddsCredits, setOddsCredits]   = useState<string | null>(null);
 
     // Betting state (stored in Supabase per-user)
@@ -483,9 +483,22 @@ export default function Home() {
     }, [bettingState, selectedGame, selectGame]);
 
     const handleSelectHistory = useCallback((title: string) => {
+        const entry = sessionHistory.find((h) => h.title === title);
+        if (entry?.type === 'question' && entry.gameId && entry.sportKey) {
+            handleAskGameSelect(entry.gameId, entry.sportKey);
+            return;
+        }
         const game = games.find((g) => `${g.away_team} @ ${g.home_team}` === title);
         if (game) selectGame(game.id);
-    }, [games, selectGame]);
+    }, [games, selectGame, sessionHistory, handleAskGameSelect]);
+
+    const handleAskHistory = useCallback((question: string, gameId: string, sportKey: string) => {
+        const title = question.length > 45 ? question.slice(0, 42) + '…' : question;
+        setSessionHistory((prev) => {
+            const filtered = prev.filter((h) => h.title !== title);
+            return [{ title, sport: 'Market Insights', type: 'question', gameId, sportKey }, ...filtered];
+        });
+    }, []);
 
     const handleSaveBet = useCallback(async (marketKey: string, bestBookTitle: string) => {
         if (!selectedGame) return;
@@ -590,7 +603,7 @@ export default function Home() {
                             alt="FadeOdds"
                             style={{ display: 'block', margin: '90px auto 0', height: '120px', width: 'auto' }}
                         />
-                        <AskBar onSelectGame={handleAskGameSelect} />
+                        <AskBar onSelectGame={handleAskGameSelect} onAskHistory={handleAskHistory} />
                         <GamesGrid
                             games={games}
                             scores={scores}

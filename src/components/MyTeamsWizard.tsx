@@ -47,6 +47,7 @@ export default function MyTeamsWizard({ allTeams, leagues, savedTeamIds, onConfi
     const leagueColor: Record<string, string> = {
         NBA: '#1d428a',
         NFL: '#013369',
+        NCAAF: '#bf5700',
         NHL: '#000',
         MLB: '#e81828',
         NCAAB: '#ff6b00',

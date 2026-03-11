@@ -265,7 +265,7 @@ body {
 .intel-tile { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
 .intel-tile.hl { border-left: 3px solid var(--cobalt); }
 .intel-tile-label { font-size: 0.5rem; color: var(--dim); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.intel-tile-val { font-size: 0.88rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+.intel-tile-val { font-size: 0.76rem; font-weight: 500; line-height: 1.55; }
 
 .rec-box { background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.15); border-radius: 12px; padding: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
 .rec-label { font-size: 0.56rem; color: var(--dim); font-weight: 900; text-transform: uppercase; }
@@ -305,9 +305,9 @@ body {
 .chat-window { max-height: 210px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding-right: 4px; }
 .msg { font-size: 0.78rem; line-height: 1.55; padding: 10px 14px; border-radius: 12px; max-width: 93%; }
 .msg-user { align-self: flex-end; background: var(--card-sub); border: 1px solid var(--border); border-bottom-right-radius: 4px; }
-.msg-ai { align-self: flex-start; background: rgba(37,99,235,0.04); border: 1px solid rgba(37,99,235,0.08); border-left: 3px solid var(--cobalt); border-bottom-left-radius: 4px; }
+.msg-ai { align-self: flex-start; background: rgba(37,99,235,0.10); border: 1px solid rgba(37,99,235,0.20); border-left: 3px solid var(--cobalt); border-bottom-left-radius: 4px; }
 
-.chat-input-row { display: flex; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; align-items: center; }
+.chat-input-row { display: flex; gap: 10px; background: var(--card); border: 1px solid var(--cobalt); border-radius: 12px; padding: 10px 14px; align-items: center; }
 .chat-input-row input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 0.82rem; }
 .send-btn { color: var(--cobalt); cursor: pointer; flex-shrink: 0; }
 
@@ -696,12 +696,70 @@ body {
     .pricing-cards { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 600px) {
-    .logo { font-size: 2.4rem; }
+    .logo { font-size: 2.4rem; padding-top: 20px; }
     .games-grid { grid-template-columns: 1fr; }
     .game-header-teams { font-size: 1.1rem; }
+    .games-section { padding: 0 12px; }
+
+    /* Sport tabs — horizontal scroll, no wrapping */
+    .sport-tabs {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 0 12px;
+        margin: 14px 0 20px;
+        gap: 6px;
+    }
+    .sport-tabs::-webkit-scrollbar { display: none; }
+    .sport-tab { flex-shrink: 0; padding: 7px 14px; font-size: 0.72rem; }
+
+    /* My Teams wizard — full screen */
+    .modal-overlay:has(.wizard-modal) { padding: 0; align-items: stretch; }
+    .wizard-modal {
+        border-radius: 0;
+        height: 100vh;
+        max-height: 100vh;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+    }
+
+    /* OddsPanel — tighter corner and row labels */
+    .odds-matrix-corner { width: 60px; min-width: 60px; padding: 6px 8px; }
+    .odds-matrix-row-label { padding: 8px 6px; font-size: 0.48rem; }
+    .odds-matrix-book-th, .odds-matrix-cell { min-width: 80px; padding: 8px 6px; }
+    .omc-main { font-size: 0.78rem; }
+    .omc-juice { font-size: 0.55rem; }
+
+    /* Game matchup header — remove logo-indent on @ separator */
+    .game-matchup-at { padding-left: 0; }
+
+    /* Ask bar chips — tighter on small screens */
+    .ask-bar-wrap { padding: 0 12px; }
+    .ask-suggestion { font-size: 0.6rem; padding: 4px 10px; }
+
+    /* Neural Intelligence section chip */
+    .ask-bar-eyebrow { padding: 12px 14px 0; }
+    .ask-bar-input-row { padding: 8px 14px; }
+    .ask-suggestions-wrap { padding: 0 14px 12px; }
+
+    /* Neural Intelligence panel — tighter padding + 2-col tiles */
+    .neural-panel { padding: 16px 14px; }
+    .intel-tiles-wide { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .intel-tile { padding: 10px 12px; }
+    .rec-box { flex-direction: column; gap: 6px; }
+    .rec-box > div:last-child { text-align: left; }
+
+    /* Chat — reduce max-height so it doesn't eat mobile viewport */
+    .chat-window { max-height: 160px; }
+    .chat-input-row { padding: 8px 12px; }
+    .msg { font-size: 0.74rem; padding: 8px 11px; }
 }
 @media (max-width: 420px) {
     .pricing-cards { grid-template-columns: 1fr; }
+    .sport-tab { padding: 6px 12px; font-size: 0.68rem; }
 }
 
 /* ─── My Teams toggle button ──────────────────────────────────────────────── */
@@ -718,7 +776,7 @@ body {
 .gear-btn:hover { background: rgba(37,99,235,0.18); border-color: var(--cobalt); }
 
 /* ─── My Teams Wizard ─────────────────────────────────────────────────────── */
-.wizard-modal { max-width: 580px; display: flex; flex-direction: column; max-height: 90vh; }
+.wizard-modal { max-width: 580px; display: flex; flex-direction: column; height: 580px; max-height: 90vh; }
 
 .wizard-header {
     padding: 28px 28px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;

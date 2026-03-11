@@ -109,18 +109,17 @@ export async function POST(request: Request) {
         CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no extra text. Use this exact format:
         {
         "tiles": [
-            {"label": "string", "val": "string"},
-            {"label": "string", "val": "string"},
-            {"label": "string", "val": "string"},
-            {"label": "string", "val": "string"}
+            {"label": "Spread Intelligence", "val": "string"},
+            {"label": "Money Intelligence", "val": "string"},
+            {"label": "Total Intelligence", "val": "string"},
+            {"label": "Key Injury Impact", "val": "string"}
         ],
-        "blurb": "string (1 sentence: describe the betting storyline or market context for this game — e.g. sharp money on the home spread, public fading the away team, or line movement signal)",
-        "expertTake": "string (2 sharp sentences on the market edge and where the value is)",
+        "expertTake": "string (2-3 sentences: first sentence sets the market context or betting storyline, remaining sentences give the sharp edge and where the value is)",
         "recommendation": "string (e.g. 'Lakers -3.5' or 'OVER 224.5' or 'PHI Moneyline')",
         "confidence": number (integer 55-92),
         "edge": "string (e.g. 'Line value on home spread' or 'Public overreacting to last game')"
         }
-        For the tiles, use sharp betting metrics like: implied probability, best ML value, spread consensus, line movement signal, public bet %, sharp money indicator, key injury impact, or home/away ATS record.`;
+        Tile guidance: Spread Intelligence = spread consensus/line movement; Money Intelligence = ML implied probability and value; Total Intelligence = over/under market signal; Key Injury Impact = most impactful injury or "No key injuries" if none.`;
 
                 userMessage = `Analyze this game for sharp bettors:
         Game: ${game.away_team} @ ${game.home_team}

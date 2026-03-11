@@ -28,7 +28,9 @@ interface AnalysisViewProps {
     onSaveBet: (marketKey: MarketKey, bestBookTitle: string) => void;
 }
 
-function InjuryPanel({ injuries }: { injuries: Injury[] }) {
+function InjuryPanel({ injuries, homeTeam, awayTeam }: { injuries: Injury[]; homeTeam: string; awayTeam: string }) {
+    const [expanded, setExpanded] = useState(false);
+
     if (!injuries.length) return null;
 
     const statusColor = (s: string) => {
@@ -39,16 +41,37 @@ function InjuryPanel({ injuries }: { injuries: Injury[] }) {
         return 'var(--dim)';
     };
 
+    // Build per-team counts for the collapsed summary
+    const teamCounts: Record<string, number> = {};
+    for (const inj of injuries) {
+        teamCounts[inj.team] = (teamCounts[inj.team] || 0) + 1;
+    }
+
+    // Map full team names to short names (last word of team name)
+    const shortName = (t: string) => t.split(' ').pop() ?? t;
+
+    const summaryParts = Object.entries(teamCounts).map(([t, n]) => `${shortName(t)}: ${n}`).join(' · ');
+    const totalLabel = `${injuries.length} injured · ${summaryParts}`;
+
     return (
         <div style={{ marginBottom: '16px' }}>
-            <div style={{
-                fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase',
-                letterSpacing: '2px', color: 'var(--orange)', marginBottom: '10px',
-                display: 'flex', alignItems: 'center', gap: '6px'
-            }}>
-                Injury Report
-            </div>
-            {injuries.map((inj, i) => (
+            <button
+                onClick={() => setExpanded((v) => !v)}
+                style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'none', border: 'none', padding: '0 0 8px 0', cursor: 'pointer',
+                    textAlign: 'left', gap: '8px'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--orange)' }}>
+                        Injury Report
+                    </span>
+                    <span style={{ fontSize: '0.58rem', color: 'var(--dim)', fontWeight: 700 }}>{totalLabel}</span>
+                </div>
+                <span style={{ fontSize: '0.6rem', color: 'var(--dim)', fontWeight: 700 }}>{expanded ? '▲' : '▼'}</span>
+            </button>
+            {expanded && injuries.map((inj, i) => (
                 <div key={i} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '7px 10px', background: 'var(--card-sub)', borderRadius: '8px',
@@ -68,6 +91,43 @@ function InjuryPanel({ injuries }: { injuries: Injury[] }) {
                     </div>
                 </div>
             ))}
+        </div>
+    );
+}
+
+function SharpTake({ text }: { text: string }) {
+    const [expanded, setExpanded] = useState(false);
+    const LIMIT = 160;
+    const isTruncatable = text.length > LIMIT;
+
+    return (
+        <div style={{ marginBottom: '16px' }}>
+            <div style={{
+                fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase',
+                letterSpacing: '2px', color: 'var(--cobalt)', marginBottom: '8px',
+                display: 'flex', alignItems: 'center', gap: '6px'
+            }}>
+                Sharp Take
+            </div>
+            <div
+                className="expert-take"
+                onClick={() => isTruncatable && setExpanded((v) => !v)}
+                style={{ cursor: isTruncatable ? 'pointer' : 'default', marginBottom: 0 }}
+            >
+                <div
+                    dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(expanded || !isTruncatable ? text : text.slice(0, LIMIT) + '…')
+                    }}
+                />
+                {isTruncatable && (
+                    <span style={{
+                        display: 'inline-block', marginTop: '4px',
+                        fontSize: '0.6rem', color: 'var(--cobalt)', fontWeight: 700
+                    }}>
+                        {expanded ? 'Show less' : 'Read more'}
+                    </span>
+                )}
+            </div>
         </div>
     );
 }
@@ -333,15 +393,6 @@ export default function AnalysisView({
                     <AnalysisLocked type={analysisError} />
                 ) : (
                     <>
-                        <div className="intel-tiles intel-tiles-wide">
-                            {analysis?.tiles.map((tile, i) => (
-                                <div key={i} className={`intel-tile ${i % 2 === 0 ? 'hl' : ''}`}>
-                                    <div className="intel-tile-label">{tile.label}</div>
-                                    <div className="intel-tile-val">{tile.val}</div>
-                                </div>
-                            ))}
-                        </div>
-
                         {analysis?.recommendation && (
                             <div className="rec-box">
                                 <div>
@@ -360,18 +411,30 @@ export default function AnalysisView({
                             </div>
                         )}
 
-                        {analysis?.expertTake && (
-                            <div
-                                className="expert-take"
-                                dangerouslySetInnerHTML={{ __html: renderMarkdown(analysis.expertTake) }}
-                            />
-                        )}
+                        <div className="intel-tiles intel-tiles-wide">
+                            {analysis?.tiles.map((tile, i) => (
+                                <div key={i} className={`intel-tile ${i % 2 === 0 ? 'hl' : ''}`}>
+                                    <div className="intel-tile-label">{tile.label}</div>
+                                    <div className="intel-tile-val">{tile.val}</div>
+                                </div>
+                            ))}
+                        </div>
 
-                        <InjuryPanel injuries={injuries} />
+                        {analysis?.expertTake && <SharpTake text={analysis.expertTake} />}
+
+                        <InjuryPanel injuries={injuries} homeTeam={game.home_team} awayTeam={game.away_team} />
                     </>
                 )}
 
                 {/* Chat */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <span style={{ fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text)' }}>
+                        Ask a Follow-up
+                    </span>
+                </div>
                 <div className="chat-window" ref={chatWindowRef}>
                     {chatMessages.map((msg, i) => (
                         msg.role === 'ai' ? (

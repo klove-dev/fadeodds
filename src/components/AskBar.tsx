@@ -56,9 +56,10 @@ function parseResponse(text: string): ParsedSegment[] {
 
 interface AskBarProps {
     onSelectGame: (gameId: string, sportKey: string) => void;
+    onAskHistory?: (question: string, gameId: string, sportKey: string) => void;
 }
 
-export default function AskBar({ onSelectGame }: AskBarProps) {
+export default function AskBar({ onSelectGame, onAskHistory }: AskBarProps) {
     const [query, setQuery] = useState('');
     const [response, setResponse] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -80,7 +81,14 @@ export default function AskBar({ onSelectGame }: AskBarProps) {
                 body: JSON.stringify({ query: trimmed }),
             });
             const data = await res.json();
-            setResponse(data.text || 'No answer available right now.');
+            const text = data.text || 'No answer available right now.';
+            setResponse(text);
+
+            // Add to history only if response contains a game link
+            const gameMatch = /\[\[GAME:([^:]+):([^|]+)\|/.exec(text);
+            if (gameMatch && onAskHistory) {
+                onAskHistory(trimmed, gameMatch[1], gameMatch[2]);
+            }
         } catch {
             setResponse('Something went wrong. Please try again.');
         } finally {

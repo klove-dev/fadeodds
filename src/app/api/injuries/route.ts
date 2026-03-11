@@ -2,6 +2,7 @@ const SPORT_MAP: Record<string, string> = {
     basketball_nba: 'basketball/nba',
     basketball_ncaab: 'basketball/mens-college-basketball',
     americanfootball_nfl: 'football/nfl',
+    americanfootball_ncaaf: 'football/college-football',
     icehockey_nhl: 'hockey/nhl',
     baseball_mlb: 'baseball/mlb'
 };
